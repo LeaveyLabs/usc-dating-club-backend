@@ -1,5 +1,6 @@
-""" Imports """
+""" Defines database models for Users """
 import os
+import random
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -11,29 +12,49 @@ def profile_picture_filepath(instance, filename) -> str:
     new_filename = f'{instance.username}.{ext}'
     return os.path.join('profiles', new_filename)
 
+def random_code() -> str:
+    """ Returns a six-digit random code """
+    return "".join([str(random.randint(0, 9)) for _ in range(6)])
+
 class User(AbstractUser):
     """ User class extension """
 
-    class GenderChoices(models.IntegerChoices):
-        """ Enum for gender options. """
-        MEN = 0, 'MEN'
-        WOMEN = 1, 'WOMEN'
-        BOTH = 2, 'BOTH'
+    SEX_CHOICES = (
+      (0, 'MALE'),
+      (1, 'FEMALE'),
+      (2, 'BOTH'),
+      (3, 'OTHER'),
+    )
 
     email = models.EmailField()
     date_of_birth = models.DateField()
     picture = models.ImageField(upload_to=profile_picture_filepath)
     phone_number = PhoneNumberField()
-    gender = models.TextField(choices=GenderChoices)
+    sex_identity = models.TextField(choices=SEX_CHOICES)
+    sex_preference = models.TextField(choices=SEX_CHOICES)
 
 class Question(models.Model):
-    """ Compatibility questions for matching users. """
+    """ Compatibility questions for matching users """
 
-    class QuestionChoices(models.IntegerChoices):
-        """ Enum for questions options. """
-        SLEEP = 0, 'What time do you sleep at night?'
+    QUESTION_CHOICES = (
+      (0,  'What time do you sleep at night?'),
+    )
 
-    type = models.TextField(choices=QuestionChoices)
+    type = models.TextField(choices=QUESTION_CHOICES)
     answer = models.IntegerField()
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class EmailAuthentication(models.Model):
+    """ Authenticate email with verification code """
+    email = models.EmailField()
+    code = models.TextField(default=random_code)
+    is_verified = models.BooleanField(default=False)
+    proxy_uuid = models.UUIDField()
+
+class PhoneAuthentication(models.Model):
+    """ Authenticate phone with verificiation code """
+    phone_number = PhoneNumberField()
+    code = models.TextField(default=random_code)
+    is_verified = models.BooleanField(default=False)
+    proxy_uuid = models.UUIDField()
