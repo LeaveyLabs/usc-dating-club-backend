@@ -80,7 +80,7 @@ class VerifyEmailCode(UpdateAPIView):
               status.HTTP_400_BAD_REQUEST)
 
         matches.update(is_verified=True)
-        return super().update(request, *args, **kwargs)
+        return Response(code_request.data, status.HTTP_200_OK)
 
 # Send Phone Phone
 # Verify Phone Code [and/or Login]

@@ -39,7 +39,7 @@ class VerifyEmailCodeTest(TestCase):
         )
 
     def test_matching_email_and_code_verifies_email(self):
-        request = APIRequestFactory().post(
+        request = APIRequestFactory().put(
           path='verify-email-code/',
           data={
               "email": self.basic_email,
