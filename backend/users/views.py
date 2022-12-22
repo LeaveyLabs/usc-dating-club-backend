@@ -6,56 +6,40 @@ from django.shortcuts import render
 from enum import Enum
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView
+from rest_framework.parsers import FormParser
+from rest_framework.serializers import ModelSerializer
 from rest_framework.response import Response
 from users.models import EmailAuthentication
 
 # Email API
 HOST_EMAIL = "lorem-ipsum@usc.edu"
 
-class EmailKeys:
-    """ JSON keys for email requests """
-    EMAIL = "email"
-    CODE = "code"
+class SendEmailCodeSerializer(ModelSerializer):
+    """ SendEmailCode Parameters """
 
-class EmailRequestParser:
-    """ Retrieves relevant keys from email request """
-
-    @staticmethod
-    def extract_email(request) -> str:
-        """ Returns email from request body """
-        try:
-          email_json = json.loads(str(request.body, encoding='utf-8'))
-          return email_json[EmailKeys.EMAIL].lower()
-        except (KeyError, json.decoder.JSONDecodeError):
-          return None
-    
-    @staticmethod
-    def extract_code(request) -> str:
-        """ Returns code from request body """
-        try:
-          email_json = json.loads(str(request.body, encoding='utf-8'))
-          return email_json[EmailKeys.CODE]
-        except (KeyError, json.decoder.JSONDecodeError):
-          return None
-
+    class Meta:
+        """ JSON fields from EmailAuthentication """
+        model = EmailAuthentication
+        fields = (
+          'email',
+          'proxy_uuid',
+        )
 
 class SendEmailCode(CreateAPIView):
     """ Send email with verification code """
+    serializer_class = SendEmailCodeSerializer
+
     def create(self, request, *args, **kwargs):
-        print(request.body)
-        email = EmailRequestParser.extract_email(request)
-        if not email:
-            return Response(
-              {
-                EmailKeys.EMAIL: "email required"
-              },
-              status.HTTP_400_BAD_REQUEST)
-        
+        email_request = SendEmailCodeSerializer(data=request.data)
+        email_request.is_valid(raise_exception=True)
+        email = email_request.data.get('email').lower()
+        proxy_uuid = email_request.data.get('proxy_uuid')
+
         EmailAuthentication.objects.filter(email__iexact=email).delete()
-        auth = EmailAuthentication.objects.create(email=email)
+        auth = EmailAuthentication.objects.create(email=email, proxy_uuid=proxy_uuid)
         self.send_email(email, auth.code)
 
-        return Response({}, status.HTTP_201_CREATED)
+        return super().create(request, *args, **kwargs)
 
     def send_email(self, email, code) -> None:
         """ Sends email with code to the provided email """
@@ -68,11 +52,25 @@ class SendEmailCode(CreateAPIView):
         )
 
 # Verify Email Code
+class VerifyEmailCodeSerializer(ModelSerializer):
+    """ VerifyEmailCode Parameters """
+
+    class Meta:
+        """ JSON fields from EmailAuthentication """
+        model = EmailAuthentication
+        fields = (
+          'email',
+          'code',
+          'proxy_uuid',
+        )
+
 class VerifyEmailCode(UpdateAPIView):
     """ Verify email with provided code """
     def update(self, request, *args, **kwargs):
-        email = EmailRequestParser.extract_email(request)
-        code = EmailRequestParser.extract_code(request)
+        code_request = VerifyEmailCodeSerializer(data=request.data)
+        code_request.is_valid(raise_exception=True)
+        email = code_request.data.get('email')
+        code = code_request.data.get('code')
         matches = EmailAuthentication.objects.filter(email__iexact=email, code=code)
         if not matches.exists():
             return Response(
@@ -82,7 +80,7 @@ class VerifyEmailCode(UpdateAPIView):
               status.HTTP_400_BAD_REQUEST)
 
         matches.update(is_verified=True)
-        return Response({}, status.HTTP_200_OK)
+        return super().update(request, *args, **kwargs)
 
 # Send Phone Phone
 # Verify Phone Code [and/or Login]

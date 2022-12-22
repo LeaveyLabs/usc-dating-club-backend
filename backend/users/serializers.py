@@ -20,18 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
           'sex_preference',
         )
 
-class EmailAuthenticationSerializer(serializers.ModelSerializer):
-    """ JSON representation of EmailAuthentication """
 
-    class Meta:
-        """ Pulling JSON fields from EmailAuthentication """
-        model = EmailAuthentication
-        fields = (
-          'id',
-          'email',
-          'is_verified',
-          'proxy_uuid',
-        )
 
 class PhoneAuthenticationSerializer(serializers.ModelSerializer):
     """ JSON representation of PhoneAuthentication """
