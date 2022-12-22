@@ -3,6 +3,7 @@ import json
 
 from django.shortcuts import render
 from enum import Enum
+from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 
@@ -17,7 +18,7 @@ class SendEmailCode(CreateAPIView):
     def create(self, request, *args, **kwargs):
         email_json = json.loads(str(request.body, encoding='utf-8'))
         if not EmailKeys.EMAIL in email_json:
-            return Response({}, )
+            return Response({"email": "email required"}, status.HTTP_400_BAD_REQUEST)
         email = email_json[EmailKeys.EMAIL]
         return super().create(request, *args, **kwargs)
 
