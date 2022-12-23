@@ -27,8 +27,6 @@ class User(AbstractUser):
     )
 
     email = models.EmailField()
-    date_of_birth = models.DateField()
-    picture = models.ImageField(upload_to=profile_picture_filepath)
     phone_number = PhoneNumberField()
     sex_identity = models.TextField(choices=SEX_CHOICES)
     sex_preference = models.TextField(choices=SEX_CHOICES)
@@ -47,14 +45,14 @@ class Question(models.Model):
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
 
 class PhoneAuthentication(models.Model):
     """ Authenticate phone with verificiation code """
-    phone_number = PhoneNumberField()
+    phone_number = PhoneNumberField(unique=True)
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()

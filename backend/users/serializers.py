@@ -11,7 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
           'id',
-          'date_of_birth',
           'email',
           'first_name',
           'last_name',
@@ -19,8 +18,6 @@ class UserSerializer(serializers.ModelSerializer):
           'sex_identity',
           'sex_preference',
         )
-
-
 
 class PhoneAuthenticationSerializer(serializers.ModelSerializer):
     """ JSON representation of PhoneAuthentication """

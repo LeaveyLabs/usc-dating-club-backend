@@ -5,7 +5,7 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.serializers import ModelSerializer
 from rest_framework.response import Response
 
-from users.models import EmailAuthentication, PhoneAuthentication
+from users.models import EmailAuthentication, PhoneAuthentication, User
 
 import sys
 sys.path.append(".")
@@ -81,7 +81,7 @@ class VerifyEmailCode(UpdateAPIView):
         if not matches.exists():
             return Response(
               {
-                'code': "code does not match"
+                'code': 'code does not match'
               },
               status.HTTP_400_BAD_REQUEST)
 
@@ -110,6 +110,7 @@ class SendPhoneCode(CreateAPIView):
         phone_number = phone_request.data.get('phone_number')
         proxy_uuid = phone_request.data.get('proxy_uuid')
 
+        PhoneAuthentication.objects.filter(phone_number=phone_number).delete()
         phone_auth = PhoneAuthentication.objects.create(
           phone_number=phone_number,
           proxy_uuid=proxy_uuid,
@@ -127,6 +128,97 @@ class SendPhoneCode(CreateAPIView):
         )
     
 # Verify Phone Code [and/or Login]
+class VerifyPhoneCodeSerializer(ModelSerializer):
+    """ VerifyPhoneCode parameters """
+
+    class Meta:
+        """ JSON fields from PhoneAuthentication """
+        model = PhoneAuthentication
+        fields = (
+          'phone_number',
+          'code',
+          'proxy_uuid',
+        )
+
+class VerifyPhoneCode(UpdateAPIView):
+    """ Verifies phone number with code """
+        
+    def update(self, request, *args, **kwargs):
+        code_request = VerifyPhoneCodeSerializer(data=request.data)
+        code_request.is_valid(raise_exception=True)
+        phone_number = code_request.data.get('phone_number')
+        code = code_request.data.get('code')
+        proxy_uuid = code_request.data.get('proxy_uuid')
+
+        matches = PhoneAuthentication.objects.filter(
+          phone_number=phone_number,
+          code=code,
+          proxy_uuid=proxy_uuid,
+        )
+        if not matches.exists():
+            return Response(
+              {
+                'code': 'code does not match'
+              },
+              status.HTTP_400_BAD_REQUEST
+            )
+        
+        matches.update(is_verified=True)
+        return Response(code_request.data, status.HTTP_200_OK)
+
 # Register User
+class RegisterUserSerializer(ModelSerializer):
+    """ RegisterUser parameters """
+
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'email',
+          'phone_number',
+          'first_name',
+          'last_name',
+          'sex_identity',
+          'sex_preference',
+        )
+
+class RegisterUser(CreateAPIView):
+    """ Registers user """
+    serializer_class = RegisterUserSerializer
+
+    def create(self, request, *args, **kwargs):
+        register_request = RegisterUserSerializer(data=request.data)
+        register_request.is_valid(raise_exception=True)
+        phone_number = register_request.data.get('phone_number')
+        email = register_request.data.get('email')
+
+        phone_match = PhoneAuthentication.objects.filter(
+          phone_number=phone_number,
+          is_verified=True,
+        )
+        email_match = EmailAuthentication.objects.filter(
+          email=email,
+          is_verified=True,
+        )
+        if not phone_match.exists() or not email_match.exists():
+            return Response(
+              {
+                'phone': 'no unregistered phone',
+                'email': 'no unregistered email',
+              },
+              status.HTTP_400_BAD_REQUEST
+            )
+        
+        if phone_match[0].proxy_uuid is not email_match[0].proxy_uuid:
+            return Response(
+              {
+                'phone': 'phone does not match email',
+                'email': 'email does not match phone',
+              },
+              status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().create(request, *args, **kwargs)
+
 # Post Survey Answers
 # Query Nearby Users
