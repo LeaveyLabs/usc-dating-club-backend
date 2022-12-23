@@ -3,11 +3,11 @@ from django.db.models import Q
 from django.core.mail import send_mail
 from django.forms import ValidationError
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView
-from rest_framework.serializers import ModelSerializer
+from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.serializers import EmailField, IntegerField, ListField, ModelSerializer, Serializer
 from rest_framework.response import Response
 
-from users.models import EmailAuthentication, PhoneAuthentication, User
+from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
 
 import sys
 sys.path.append(".")
@@ -249,9 +249,42 @@ class RegisterUser(CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 # Post Survey Answers
-# List Nearby Users
+class PostSurveyAnswersSerializer(ModelSerializer):
+    """ PostSurveyAnswers parameters """
+    email = EmailField()
+    responses = ListField(child=ListField(child=IntegerField))
+
+class PostSurveyAnswers(CreateAPIView):
+    """ Post survey answers """
+
+    def create(self, request, *args, **kwargs):
+        survey_request = PostSurveyAnswersSerializer(data=request.data)
+        survey_request.is_valid(raise_exception=True)
+        email = survey_request.data.get('email')
+        q_responses = survey_request.data.get('responses')
+
+        user_match = User.objects.filter(email=email)
+        if not user_match:
+            return Response(
+              {
+                'email': 'email does not exist'
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+        
+        for q_type, q_answer in q_responses:
+            Question.objects.create(
+              type=q_type,
+              answre=q_answer,
+              user=user_match,
+            )
+        
+        return Response(survey_request.data, status.HTTP_201_CREATED)
+
+# UpdateLocation
 class UpdateLocationSerializer(ModelSerializer):
     """" UpdateLocation parameters """
+
     class Meta:
         """ JSON fields from User """
         model = User
@@ -307,3 +340,56 @@ class UpdateLocation(UpdateAPIView):
           nearby_users_list,
           status.HTTP_200_OK,
         )
+
+# Match Users
+class MatchUsersSerializer(Serializer):
+    """ MatchUsers parameters """
+    email1 = EmailField()
+    email2 = EmailField()
+
+class MatchUsers(CreateAPIView):
+    """ Matches two users """
+    
+    def create(self, request, *args, **kwargs):
+        match_request = MatchUsersSerializer(data=request.data)
+        match_request.is_valid()
+
+        email1 = match_request.data.get('email1')
+        email2 = match_request.data.get('email2')
+        [email1, email2] = sorted([email1, email2])
+
+        user1 = User.objects.filter(email=email1)
+        user2 = User.objects.filter(email=email2)
+
+        if not user1.exists() or not user2.exists():
+            return Response(
+              {
+                'email1': 'email1 or email2 does not exist',
+                'email2': 'email1 or email2 does not exist',
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+
+        Match.objects.create(user1=user1, user2=user2)
+
+        return Response(
+          match_request.data,
+          status.HTTP_201_CREATED,
+        )
+
+# Delete Account
+class DeleteAccountSerializer(Serializer):
+    """" DeleteAccount parameters """
+    email = EmailField()
+
+class DeleteAccount(DestroyAPIView):
+    """ Deletes account """
+    
+    def destroy(self, request, *args, **kwargs):
+        delete_request = DeleteAccountSerializer(data=request.data)
+        delete_request.is_valid()
+        email = delete_request.data.get('email')
+
+        User.objects.filter(email=email).delete()
+
+        return Response(delete_request.data, status.HTTP_204_NO_CONTENT)

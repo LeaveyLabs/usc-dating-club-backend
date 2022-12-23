@@ -3,6 +3,7 @@ import os
 import random
 from uuid import uuid4
 
+from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
@@ -40,6 +41,14 @@ class User(AbstractUser):
         self.username = uuid4()
         self.password = uuid4()
         return super().save(*args, **kwargs)
+
+class Match(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match1")
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match2")
+    time = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        unique_together = ('user1', 'user2', )
 
 class Question(models.Model):
     """ Compatibility questions for matching users """

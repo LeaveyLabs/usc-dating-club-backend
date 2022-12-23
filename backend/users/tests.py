@@ -26,7 +26,7 @@ class SendEmailCodeTest(TestCase):
           }
         )
         response = SendEmailCode.as_view()(request)
-        
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(EmailAuthentication.objects.filter(email="kevinsun@usc.edu"))
@@ -242,3 +242,18 @@ class UpdateLocationTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected_json)
+
+class UpdateProfileTest(TestCase):
+    def setUp(self):
+        self.basic_user1 = random_user(1)
+
+    def test_basic_updating_sex(self):
+        """" Update sex identity and preference """
+        request = APIRequestFactory().put(
+            path="update-profile/",
+            data={
+              'sex_identity': not self.basic_user1.sex_identity,
+              'sex_preference': not self.basic_user1.sex_preference,
+            }
+        )
+        response = 
