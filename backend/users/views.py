@@ -1,5 +1,7 @@
-""" Defines API functions for Users """
+""" Defines API for Users """
+from django.db.models import Q
 from django.core.mail import send_mail
+from django.forms import ValidationError
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.serializers import ModelSerializer
@@ -25,6 +27,13 @@ class SendEmailCodeSerializer(ModelSerializer):
           'proxy_uuid',
         )
 
+    def validate_email(self, email):
+        """ Emails should be from USC only """
+        domain = email.split('@')[-1]
+        if domain not in ['usc.edu']:
+            raise ValidationError('non usc email')
+        return email
+
 class SendEmailCode(CreateAPIView):
     """ Send email with verification code """
     serializer_class = SendEmailCodeSerializer
@@ -35,11 +44,20 @@ class SendEmailCode(CreateAPIView):
         email = email_request.data.get('email').lower()
         proxy_uuid = email_request.data.get('proxy_uuid')
 
+        user_matches = User.objects.filter(email=email)
+        if user_matches.exists():
+            return Response(
+              {
+                'email': 'email taken'
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+
         EmailAuthentication.objects.filter(email__iexact=email).delete()
         auth = EmailAuthentication.objects.create(email=email, proxy_uuid=proxy_uuid)
         self.send_email(email, auth.code)
 
-        return super().create(request, *args, **kwargs)
+        return Response(email_request.data, status.HTTP_201_CREATED)
 
     def send_email(self, email, code) -> None:
         """ Sends email with code to the provided email """
@@ -110,6 +128,15 @@ class SendPhoneCode(CreateAPIView):
         phone_number = phone_request.data.get('phone_number')
         proxy_uuid = phone_request.data.get('proxy_uuid')
 
+        user_matches = User.objects.filter(phone_number=phone_number)
+        if user_matches.exists():
+            return Response(
+              {
+                'phone_number': 'phone number taken'
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+
         PhoneAuthentication.objects.filter(phone_number=phone_number).delete()
         phone_auth = PhoneAuthentication.objects.create(
           phone_number=phone_number,
@@ -117,7 +144,7 @@ class SendPhoneCode(CreateAPIView):
         )
         self.send_text(phone_number, phone_auth.code)
 
-        return super().create(request, *args, **kwargs)
+        return Response(phone_request.data, status.HTTP_201_CREATED)
 
     def send_text(self, phone_number, code):
         """ Sends verification text to phone number """
@@ -142,7 +169,7 @@ class VerifyPhoneCodeSerializer(ModelSerializer):
 
 class VerifyPhoneCode(UpdateAPIView):
     """ Verifies phone number with code """
-        
+
     def update(self, request, *args, **kwargs):
         code_request = VerifyPhoneCodeSerializer(data=request.data)
         code_request.is_valid(raise_exception=True)
@@ -200,19 +227,20 @@ class RegisterUser(CreateAPIView):
           email=email,
           is_verified=True,
         )
+
         if not phone_match.exists() or not email_match.exists():
             return Response(
               {
-                'phone': 'no unregistered phone',
+                'phone_number': 'no unregistered phone',
                 'email': 'no unregistered email',
               },
               status.HTTP_400_BAD_REQUEST
             )
-        
-        if phone_match[0].proxy_uuid is not email_match[0].proxy_uuid:
+
+        if phone_match[0].proxy_uuid != email_match[0].proxy_uuid:
             return Response(
               {
-                'phone': 'phone does not match email',
+                'phone_number': 'phone does not match email',
                 'email': 'email does not match phone',
               },
               status.HTTP_400_BAD_REQUEST
@@ -221,4 +249,61 @@ class RegisterUser(CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 # Post Survey Answers
-# Query Nearby Users
+# List Nearby Users
+class UpdateLocationSerializer(ModelSerializer):
+    """" UpdateLocation parameters """
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'latitude',
+          'longitude',
+        )
+
+class NearbyUserSerializer(ModelSerializer):
+    """ Limited information about nearby users """
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'id',
+          'first_name',
+          'last_name',
+          'sex_identity',
+          'sex_preference',
+        )
+
+class UpdateLocation(UpdateAPIView):
+    """ List nearby users to a location """
+
+    serializer_class = NearbyUserSerializer
+
+    def update(self, request, *args, **kwargs):
+        location_request = UpdateLocationSerializer(data=request.data)
+        location_request.is_valid(raise_exception=True)
+
+        latitude = location_request.data.get('latitude')
+        longitude = location_request.data.get('longitude')
+
+        within_latitude = (
+          Q(latitude__isnull=False)&
+          Q(latitude__lte=latitude+.001)&
+          Q(latitude__gte=latitude-.001)
+        )
+        within_longitude = (
+          Q(longitude__isnull=False)&
+          Q(longitude__lte=longitude+.001)&
+          Q(longitude__gte=longitude-.001)
+        )
+
+        nearby_users = User.objects.filter(
+          within_latitude & within_longitude
+        )
+        nearby_users_list = [
+          NearbyUserSerializer(nearby_user).data
+          for nearby_user in nearby_users
+        ]
+        return Response(
+          nearby_users_list,
+          status.HTTP_200_OK,
+        )

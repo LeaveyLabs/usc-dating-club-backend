@@ -1,6 +1,7 @@
 """ Defines database models for Users """
 import os
 import random
+from uuid import uuid4
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -26,10 +27,19 @@ class User(AbstractUser):
       (3, 'OTHER'),
     )
 
-    email = models.EmailField()
-    phone_number = PhoneNumberField()
+    email = models.EmailField(unique=True)
+    phone_number = PhoneNumberField(unique=True)
     sex_identity = models.TextField(choices=SEX_CHOICES)
     sex_preference = models.TextField(choices=SEX_CHOICES)
+
+    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True)
+
+    def save(self, *args, **kwargs) -> None:
+        """ Overrides username and password generation """
+        self.username = uuid4()
+        self.password = uuid4()
+        return super().save(*args, **kwargs)
 
 class Question(models.Model):
     """ Compatibility questions for matching users """
@@ -45,14 +55,14 @@ class Question(models.Model):
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
 
 class PhoneAuthentication(models.Model):
     """ Authenticate phone with verificiation code """
-    phone_number = PhoneNumberField(unique=True)
+    phone_number = PhoneNumberField()
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()

@@ -1,3 +1,5 @@
+""" Tests for User APIs """
+import random
 from django.core import mail
 from django.test import TestCase
 from rest_framework import status
@@ -5,7 +7,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, PhoneAuthentication, User
-from users.views import RegisterUser, SendEmailCode, SendPhoneCode, VerifyEmailCode, VerifyPhoneCode
+from users.views import NearbyUserSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -24,10 +26,42 @@ class SendEmailCodeTest(TestCase):
           }
         )
         response = SendEmailCode.as_view()(request)
-
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(EmailAuthentication.objects.filter(email="kevinsun@usc.edu"))
+
+    def test_already_taken_usc_email_does_not_send_code(self):
+        """ Verify taken.usc.email@usc.edu"""
+        User.objects.create(email='taken.usc.email@usc.edu')
+        request = APIRequestFactory().post(
+          path="send-email-code/",
+          data={
+            "email": "taken.usc.email@usc.edu",
+            "proxy_uuid": uuid4(),
+          }
+        )
+        response = SendEmailCode.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertFalse(EmailAuthentication.objects.filter(email="taken.usc.email@usc.edu"))
+    
+    def test_non_usc_email_does_not_send_code(self):
+        """ Verify kevinsun127@gmail.com """
+        request = APIRequestFactory().post(
+          path="send-email-code/",
+          data={
+            "email": "kevinsun127@gmail.com",
+            "proxy_uuid": uuid4(),
+          }
+        )
+        response = SendEmailCode.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertFalse(EmailAuthentication.objects.filter(email="kevinsun127@gmail.com"))
+
 
 class VerifyEmailCodeTest(TestCase):
     """ Test email verifier API """
@@ -44,6 +78,7 @@ class VerifyEmailCodeTest(TestCase):
         )
 
     def test_matching_email_and_code_verifies_email(self):
+        """ Verify kevinsun@usc.edu with 123456 """
         request = APIRequestFactory().put(
           path='verify-email-code/',
           data={
@@ -138,6 +173,7 @@ class RegisterUserTest(TestCase):
         )
 
     def test_basic_user_info_registers_user(self):
+        """ Register Kevin Sun (kevinsun@usc.edu) """
         request = APIRequestFactory().post(
           path='register-user/',
           data={
@@ -160,3 +196,49 @@ class RegisterUserTest(TestCase):
           sex_identity=self.basic_sex_identity,
           sex_preference=self.basic_sex_preference,
         ))
+
+
+def random_user(id, sex_identity=None, sex_preference=None) -> User:
+    """ Instantiates a random user """
+    sex_identity = sex_identity if sex_identity else random.randint(0, 1)
+    sex_preference = sex_preference if sex_preference else random.randint(0, 1)
+    phone_body = "".join([str(random.randint(0,9)) for _ in range(7)])
+    return User(
+        id=id,
+        email=f'{id}@usc.edu',
+        phone_number=f'+1310{phone_body}',
+        first_name="Kevin",
+        last_name="Sun",
+        sex_identity=sex_identity,
+        sex_preference=sex_preference,
+    )
+
+class UpdateLocationTest(TestCase):
+    """ Test location update """
+
+    def setUp(self):
+        self.user1 = random_user(1, 0, 1)
+        self.user2 = random_user(2, 1, 0)
+
+        self.user1.save()
+        self.user2.save()
+      
+    def test_basic_location_update_returns_nearby_user(self):
+        """" Both people are in the same location """
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'latitude': 0,
+            'longitude': 0,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        expected_json = [NearbyUserSerializer(self.user1).data]
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_json)
