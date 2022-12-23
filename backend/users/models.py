@@ -58,3 +58,4 @@ class PhoneAuthentication(models.Model):
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
+    

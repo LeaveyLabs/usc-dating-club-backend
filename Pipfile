@@ -9,6 +9,7 @@ django-phonenumber-field = "*"
 djangorestframework = "*"
 phonenumbers = "*"
 pillow = "*"
+twilio = "*"
 
 [dev-packages]
 

@@ -2,9 +2,14 @@ from django.core import mail
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
-from users.models import EmailAuthentication
-from users.views import SendEmailCode, VerifyEmailCode
 from uuid import uuid4
+
+from users.models import EmailAuthentication, PhoneAuthentication
+from users.views import SendEmailCode, SendPhoneCode, VerifyEmailCode
+
+import sys
+sys.path.append(".")
+from twilio_config import TwilioTestClientMessages
 
 class SendEmailCodeTest(TestCase):
     """ Test email sender API """
@@ -56,4 +61,22 @@ class VerifyEmailCodeTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(email_auth.is_verified)
+
+class SendPhoneCodeTest(TestCase):
+    """ Test text sender API """
+
+    def test_basic_phone_number_sends_code(self):
+        """ Verify +13108741292 """
+        request = APIRequestFactory().post(
+          path="send-phone-code/",
+          data={
+              "phone_number": "+13108741292",
+              "proxy_uuid": uuid4(),
+          }
+        )
+        response = SendPhoneCode.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        self.assertEqual(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
 
