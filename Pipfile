@@ -12,6 +12,7 @@ pillow = "*"
 twilio = "*"
 apns2 = "*"
 django-push-notifications = "*"
+gunicorn = "*"
 
 [dev-packages]
 

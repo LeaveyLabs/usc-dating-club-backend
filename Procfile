@@ -1,0 +1,1 @@
+web: pipenv run ./backend/manage.py runserver
