@@ -7,6 +7,7 @@ from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
+from push_notifications.models import APNSDevice
 
 def profile_picture_filepath(instance, filename) -> str:
     """ Returns save location of profile picture """
@@ -43,11 +44,13 @@ class User(AbstractUser):
         return super().save(*args, **kwargs)
 
 class Match(models.Model):
+    """ Match between two users """
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match1")
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match2")
     time = models.DateTimeField(default=datetime.now)
 
     class Meta:
+        """ Two users cannot match more than once """
         unique_together = ('user1', 'user2', )
 
 class Question(models.Model):
@@ -75,4 +78,25 @@ class PhoneAuthentication(models.Model):
     code = models.TextField(default=random_code)
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
-    
+
+class Notification(models.Model):
+    """ Wrapper for APNS Notifications """
+    NOTIFICATION_OPTIONS = (
+        (0, 'match'),
+    )
+
+    user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
+    type = models.CharField(max_length=15, choices=NOTIFICATION_OPTIONS,)
+    message = models.TextField()
+    data = models.JSONField(null=True, blank=True)
+    time = models.DateTimeField(default=datetime.now)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        APNSDevice.objects.filter(user=self.user).send_message(
+            self.message,
+            extra={
+                "type": self.type,
+                "data": self.data,
+            }
+        )

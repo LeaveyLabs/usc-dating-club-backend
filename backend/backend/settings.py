@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "push_notifications",
     "users",
 ]
 
@@ -126,3 +127,27 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Default user model
 AUTH_USER_MODEL = 'users.User'
+
+apns_file_name = os.path.join(BASE_DIR, 'auth_key.p8')
+if os.environ.get('APNS_AUTH_KEY_FILE_TEXT'):
+    # create auth key file from ENV var
+    from tempfile import NamedTemporaryFile
+    import atexit
+    apns_file = NamedTemporaryFile(delete=False)
+    apns_file.write(bytes(os.environ.get('APNS_AUTH_KEY_FILE_TEXT'), 'UTF-8'))
+    apns_file.close()
+    apns_file_name = apns_file.name
+
+    def unlink_apns_file():
+        os.unlink(apns_file_name)
+    atexit.register(unlink_apns_file)  # remove auth key file on exit
+
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "APNS_AUTH_KEY_PATH": apns_file_name,
+    "APNS_AUTH_KEY_ID": os.environ.get('APNS_AUTH_KEY_ID'),
+    "APNS_TEAM_ID": os.environ.get('APNS_TEAM_ID'),
+    "APNS_TOPIC": os.environ.get('APNS_TOPIC'),
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+    "UNIQUE_REG_ID": True,
+    "APNS_USE_SANDBOX": os.environ.get("APNS_USE_SANDBOX"),
+}

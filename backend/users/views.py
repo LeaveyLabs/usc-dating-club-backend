@@ -377,6 +377,9 @@ class MatchUsers(CreateAPIView):
           status.HTTP_201_CREATED,
         )
 
+    def send_match_notification(user1, user2):
+        pass
+
 # Delete Account
 class DeleteAccountSerializer(Serializer):
     """" DeleteAccount parameters """

@@ -10,6 +10,8 @@ djangorestframework = "*"
 phonenumbers = "*"
 pillow = "*"
 twilio = "*"
+apns2 = "*"
+django-push-notifications = "*"
 
 [dev-packages]
 
