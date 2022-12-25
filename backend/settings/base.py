@@ -22,12 +22,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,7 +31,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "phonenumber_field",
     "push_notifications",
+    "rest_framework",
     "users",
 ]
 
@@ -127,9 +123,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Default user model
 AUTH_USER_MODEL = 'users.User'
-
-import dj_database_url
-DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
 
 # Email details
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

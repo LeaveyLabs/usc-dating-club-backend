@@ -13,6 +13,8 @@ twilio = "*"
 apns2 = "*"
 django-push-notifications = "*"
 gunicorn = "*"
+dj-database-url = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

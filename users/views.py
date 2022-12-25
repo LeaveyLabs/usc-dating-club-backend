@@ -252,7 +252,7 @@ class RegisterUser(CreateAPIView):
 class PostSurveyAnswersSerializer(ModelSerializer):
     """ PostSurveyAnswers parameters """
     email = EmailField()
-    responses = ListField(child=ListField(child=IntegerField))
+    responses = ListField(child=ListField(child=IntegerField()))
 
 class PostSurveyAnswers(CreateAPIView):
     """ Post survey answers """
