@@ -244,7 +244,7 @@ class UpdateLocationTest(TestCase):
         self.assertEqual(response.data, expected_json)
 
 
-class PostSurveyAnswers(TestCase):
+class PostSurveyAnswersTest(TestCase):
     def setUp(self):
         # Put together users
         pass
@@ -253,7 +253,7 @@ class PostSurveyAnswers(TestCase):
         """ Post (0-9, 1-5) tuples with an existing user """
         pass
 
-class DeleteAccount(TestCase):
+class DeleteAccountTest(TestCase):
     def setUp(self):
         pass
     

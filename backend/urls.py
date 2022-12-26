@@ -15,7 +15,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
+from rest_framework import routers
+
+from users.views import DeleteAccount, MatchUsers, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
+
+router = routers.DefaultRouter()
+router.register("devices", APNSDeviceAuthorizedViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Authentication
+    path("send-email-code/", SendEmailCode.as_view()),
+    path("verify-email-code/", VerifyEmailCode.as_view()),
+    path("send-phone-code", SendPhoneCode.as_view()),
+    path("verify-phone-code/", VerifyPhoneCode.as_view()),
+    path("register-user/", RegisterUser.as_view()),
+    path("post-survey-answers/", PostSurveyAnswers.as_view()),
+    path("update-location/", UpdateLocation.as_view()),
+    path("match-users", MatchUsers.as_view()),
+    path("delete-account/", DeleteAccount.as_view()),
 ]
+
+# Devices
+urlpatterns += router.urls
