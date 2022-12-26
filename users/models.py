@@ -62,7 +62,6 @@ class Question(models.Model):
 
     type = models.TextField(choices=QUESTION_CHOICES)
     answer = models.IntegerField()
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class EmailAuthentication(models.Model):
@@ -81,8 +80,11 @@ class PhoneAuthentication(models.Model):
 
 class Notification(models.Model):
     """ Wrapper for APNS Notifications """
+    class Choices:
+        MATCH = "match"
+    
     NOTIFICATION_OPTIONS = (
-        (0, 'match'),
+        (Choices.MATCH, Choices.MATCH),
     )
 
     user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)

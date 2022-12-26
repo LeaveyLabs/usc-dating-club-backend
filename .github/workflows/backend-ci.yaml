@@ -19,7 +19,6 @@ jobs:
         ENVIRONMENT: local
         SECRET_KEY: ${{secrets.SECRET_KEY}}
         
-
     services:
       postgres:
         image: postgres

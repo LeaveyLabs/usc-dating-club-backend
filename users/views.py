@@ -7,7 +7,7 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import EmailField, IntegerField, ListField, ModelSerializer, Serializer
 from rest_framework.response import Response
 
-from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
+from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
 
 import sys
 sys.path.append(".")
@@ -371,14 +371,31 @@ class MatchUsers(CreateAPIView):
             )
 
         Match.objects.create(user1=user1, user2=user2)
+        self.send_match_notification(user1, user2, match_request.data)
 
         return Response(
           match_request.data,
           status.HTTP_201_CREATED,
         )
 
-    def send_match_notification(user1, user2):
-        pass
+    def send_match_notification(self, user1, user2, match_data) -> None:
+        Notification.objects.bulk_create([
+          Notification(
+            user=user1,
+            type=Notification.Choices.MATCH,
+            message=self.match_message(user1.first_name, user2.first_name),
+            data=match_data,
+          ),
+          Notification(
+            user=user2,
+            type=Notification.Choices.MATCH,
+            message=self.match_message(user2.first_name, user1.first_name),
+            data=match_data,
+          ),
+        ])
+      
+    def match_message(self, receiver_name, sender_name) -> str:
+        return f'{receiver_name}, you matched with {sender_name}!'
 
 # Delete Account
 class DeleteAccountSerializer(Serializer):
