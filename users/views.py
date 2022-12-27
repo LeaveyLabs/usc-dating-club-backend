@@ -84,6 +84,8 @@ class VerifyEmailCodeSerializer(ModelSerializer):
 
 class VerifyEmailCode(UpdateAPIView):
     """ Verify email with provided code """
+    serializer_class = VerifyEmailCodeSerializer
+
     def update(self, request, *args, **kwargs):
         code_request = VerifyEmailCodeSerializer(data=request.data)
         code_request.is_valid(raise_exception=True)
@@ -169,6 +171,7 @@ class VerifyPhoneCodeSerializer(ModelSerializer):
 
 class VerifyPhoneCode(UpdateAPIView):
     """ Verifies phone number with code """
+    serializer_class = VerifyPhoneCodeSerializer
 
     def update(self, request, *args, **kwargs):
         code_request = VerifyPhoneCodeSerializer(data=request.data)
@@ -256,6 +259,7 @@ class PostSurveyAnswersSerializer(ModelSerializer):
 
 class PostSurveyAnswers(CreateAPIView):
     """ Post survey answers """
+    serializer_class = PostSurveyAnswersSerializer
 
     def create(self, request, *args, **kwargs):
         survey_request = PostSurveyAnswersSerializer(data=request.data)
@@ -308,7 +312,6 @@ class NearbyUserSerializer(ModelSerializer):
 
 class UpdateLocation(UpdateAPIView):
     """ List nearby users to a location """
-
     serializer_class = NearbyUserSerializer
 
     def update(self, request, *args, **kwargs):
@@ -349,6 +352,7 @@ class MatchUsersSerializer(Serializer):
 
 class MatchUsers(CreateAPIView):
     """ Matches two users """
+    serializer_class = MatchUsersSerializer
     
     def create(self, request, *args, **kwargs):
         match_request = MatchUsersSerializer(data=request.data)
@@ -404,6 +408,7 @@ class DeleteAccountSerializer(Serializer):
 
 class DeleteAccount(DestroyAPIView):
     """ Deletes account """
+    serializer_class = DeleteAccountSerializer
     
     def destroy(self, request, *args, **kwargs):
         delete_request = DeleteAccountSerializer(data=request.data)
