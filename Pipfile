@@ -15,6 +15,7 @@ django-push-notifications = "*"
 gunicorn = "*"
 dj-database-url = "*"
 psycopg2 = "*"
+django-heroku = "*"
 
 [dev-packages]
 
