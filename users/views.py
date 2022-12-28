@@ -1,4 +1,6 @@
 """ Defines API for Users """
+import os
+
 from django.db.models import Q
 from django.core.mail import send_mail
 from django.forms import ValidationError
@@ -14,7 +16,7 @@ sys.path.append(".")
 from twilio_config import twilio_client, twilio_phone_number
 
 # Email API
-HOST_EMAIL = "lorem-ipsum@usc.edu"
+HOST_EMAIL = os.environ.get("EMAIL_HOST_USER")
 
 class SendEmailCodeSerializer(ModelSerializer):
     """ SendEmailCode Parameters """
@@ -293,6 +295,7 @@ class UpdateLocationSerializer(ModelSerializer):
         """ JSON fields from User """
         model = User
         fields = (
+          'email',
           'latitude',
           'longitude',
         )
@@ -318,8 +321,14 @@ class UpdateLocation(UpdateAPIView):
         location_request = UpdateLocationSerializer(data=request.data)
         location_request.is_valid(raise_exception=True)
 
+        email = location_request.data.get('email')
         latitude = location_request.data.get('latitude')
         longitude = location_request.data.get('longitude')
+
+        User.objects.filter(email=email).update(
+          latitude=latitude,
+          longitude=longitude,
+        )
 
         within_latitude = (
           Q(latitude__isnull=False)&
