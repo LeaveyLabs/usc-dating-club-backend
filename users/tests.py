@@ -232,6 +232,7 @@ class UpdateLocationTest(TestCase):
         request = APIRequestFactory().put(
           path='update-location/',
           data={
+            'email': self.user1.email,
             'latitude': 0,
             'longitude': 0,
           }

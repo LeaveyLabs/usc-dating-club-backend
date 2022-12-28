@@ -290,6 +290,7 @@ class PostSurveyAnswers(CreateAPIView):
 # UpdateLocation
 class UpdateLocationSerializer(ModelSerializer):
     """" UpdateLocation parameters """
+    email = EmailField()
 
     class Meta:
         """ JSON fields from User """
