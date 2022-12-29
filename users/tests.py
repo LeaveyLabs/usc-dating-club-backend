@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import EmailAuthentication, PhoneAuthentication, User
-from users.views import NearbyUserSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
+from users.models import EmailAuthentication, PhoneAuthentication, Question, User
+from users.views import DeleteAccount, NearbyUserSerializer, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -247,16 +247,40 @@ class UpdateLocationTest(TestCase):
 
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):
-        # Put together users
-        pass
+        self.user1 = random_user(1, 0, 1)
+
+        self.user1.save()
     
     def test_basic_survey_answers_should_create_questions(self):
         """ Post (0-9, 1-5) tuples with an existing user """
-        pass
+        request = APIRequestFactory().post(
+          path='post-survey-answers/',
+          data={
+            'email': self.user1.email,
+            'responses': [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
+          }
+        )
+        response = PostSurveyAnswers.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(Question.objects.filter(user=self.user1)), 10)
+
 
 class DeleteAccountTest(TestCase):
     def setUp(self):
-        pass
+        self.user1 = random_user(1, 0, 1)
+
+        self.user1.save()
     
     def test_delete_basic_account_should_delete_account(self):
-        pass
+        """ Delete kevinsun@usc.edu """
+        request = APIRequestFactory().delete(
+          path='delete-account/',
+          data={
+            'email': self.user1.email,
+          }
+        )
+        response = DeleteAccount.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(id=self.user1.id))

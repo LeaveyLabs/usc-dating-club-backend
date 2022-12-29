@@ -254,10 +254,10 @@ class RegisterUser(CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 # Post Survey Answers
-class PostSurveyAnswersSerializer(ModelSerializer):
+class PostSurveyAnswersSerializer(Serializer):
     """ PostSurveyAnswers parameters """
     email = EmailField()
-    responses = ListField(child=ListField(child=IntegerField()))
+    responses = ListField(child=IntegerField())
 
 class PostSurveyAnswers(CreateAPIView):
     """ Post survey answers """
@@ -269,38 +269,26 @@ class PostSurveyAnswers(CreateAPIView):
         email = survey_request.data.get('email')
         q_responses = survey_request.data.get('responses')
 
-        user_match = User.objects.filter(email=email)
-        if not user_match:
+        user_matches = User.objects.filter(email=email)
+        if not user_matches:
             return Response(
               {
                 'email': 'email does not exist'
               },
               status.HTTP_400_BAD_REQUEST,
             )
+        user_match = user_matches[0]
         
-        for q_type, q_answer in q_responses:
+        for q_type, q_answer in enumerate(q_responses):
             Question.objects.create(
               type=q_type,
-              answre=q_answer,
+              answer=q_answer,
               user=user_match,
             )
         
         return Response(survey_request.data, status.HTTP_201_CREATED)
 
 # UpdateLocation
-class UpdateLocationSerializer(ModelSerializer):
-    """" UpdateLocation parameters """
-    email = EmailField()
-
-    class Meta:
-        """ JSON fields from User """
-        model = User
-        fields = (
-          'email',
-          'latitude',
-          'longitude',
-        )
-
 class NearbyUserSerializer(ModelSerializer):
     """ Limited information about nearby users """
     class Meta:
@@ -312,6 +300,19 @@ class NearbyUserSerializer(ModelSerializer):
           'last_name',
           'sex_identity',
           'sex_preference',
+        )
+
+class UpdateLocationSerializer(ModelSerializer):
+    """" UpdateLocation parameters """
+    email = EmailField()
+
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'email',
+          'latitude',
+          'longitude',
         )
 
 class UpdateLocation(UpdateAPIView):
