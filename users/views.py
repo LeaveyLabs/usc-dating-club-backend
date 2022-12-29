@@ -159,6 +159,20 @@ class SendPhoneCode(CreateAPIView):
         )
     
 # Verify Phone Code [and/or Login]
+class CompleteUserSerializer(ModelSerializer):
+    """ Complete information about user """
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'id',
+          'email',
+          'first_name',
+          'last_name',
+          'sex_identity',
+          'sex_preference',
+        )
+
 class VerifyPhoneCodeSerializer(ModelSerializer):
     """ VerifyPhoneCode parameters """
 
@@ -193,6 +207,14 @@ class VerifyPhoneCode(UpdateAPIView):
                 'code': 'code does not match'
               },
               status.HTTP_400_BAD_REQUEST
+            )
+        
+        users = User.objects.filter(phone_number=phone_number)
+        if users.exists():
+            user = users[0]
+            return Response(
+              CompleteUserSerializer(user).data,
+              status.HTTP_200_OK,
             )
         
         matches.update(is_verified=True)
@@ -236,8 +258,8 @@ class RegisterUser(CreateAPIView):
         if not phone_match.exists() or not email_match.exists():
             return Response(
               {
-                'phone_number': 'no unregistered phone',
-                'email': 'no unregistered email',
+                'phone_number': 'unregistered phone',
+                'email': 'unregistered email',
               },
               status.HTTP_400_BAD_REQUEST
             )

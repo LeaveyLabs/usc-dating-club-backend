@@ -150,6 +150,9 @@ class VerifyPhoneCodeTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(phone_auth.is_verified)
 
+    def test_verifying_existing_phone_number_returns_user(self):
+        pass
+
 class RegisterUserTest(TestCase):
     """ Tests user registration API """
     def setUp(self):

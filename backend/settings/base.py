@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "push_notifications",
     "rest_framework",
+    # "rest_framework.authtoken",
     "users",
 ]
 
@@ -144,3 +145,17 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     "UNIQUE_REG_ID": True,
     "APNS_USE_SANDBOX": os.environ.get("APNS_USE_SANDBOX"),
 }
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+#     'DEFAULT_THROTTLE_CLASSES': [
+#         'rest_framework.throttling.AnonRateThrottle',
+#         'rest_framework.throttling.UserRateThrottle'
+#     ],
+#     'DEFAULT_THROTTLE_RATES': {
+#         'anon': '50/minute',
+#         'user': '200/minute'
+#     },
+# }
