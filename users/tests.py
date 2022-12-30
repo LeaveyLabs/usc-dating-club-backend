@@ -13,6 +13,7 @@ import sys
 sys.path.append(".")
 from twilio_config import TwilioTestClientMessages
 
+
 class SendEmailCodeTest(TestCase):
     """ Test email sender API """
 
@@ -97,6 +98,7 @@ class VerifyEmailCodeTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(email_auth.is_verified)
 
+
 class SendPhoneCodeTest(TestCase):
     """ Test text sender API """
 
@@ -114,6 +116,13 @@ class SendPhoneCodeTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(TwilioTestClientMessages.created), 1)
         self.assertTrue(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
+
+    def test_duplicate_phone_number_without_registration_sends_code(self):
+        pass
+    
+    def test_duplicate_phone_number_with_registration_does_not_send_code(self):
+        pass
+
 
 class VerifyPhoneCodeTest(TestCase):
     """ Test phone verifier API """
@@ -153,6 +162,7 @@ class VerifyPhoneCodeTest(TestCase):
     def test_verifying_existing_phone_number_returns_user(self):
         pass
 
+
 class RegisterUserTest(TestCase):
     """ Tests user registration API """
     def setUp(self):
@@ -160,8 +170,8 @@ class RegisterUserTest(TestCase):
         self.basic_phone_number = "+13108741292"
         self.basic_first_name = "Kevin"
         self.basic_last_name = "Sun"
-        self.basic_sex_identity = 0
-        self.basic_sex_preference = 1
+        self.basic_sex_identity = User.SexChoices.MALE
+        self.basic_sex_preference = User.SexChoices.FEMALE
         self.basic_proxy_uuid = uuid4()
 
         EmailAuthentication.objects.create(
@@ -203,8 +213,8 @@ class RegisterUserTest(TestCase):
 
 def random_user(id, sex_identity=None, sex_preference=None) -> User:
     """ Instantiates a random user """
-    sex_identity = sex_identity if sex_identity else random.randint(0, 1)
-    sex_preference = sex_preference if sex_preference else random.randint(0, 1)
+    sex_identity = sex_identity if sex_identity else random.choice(User.SEX_CHOICES)[0]
+    sex_preference = sex_preference if sex_preference else random.choice(User.SEX_CHOICES)[0]
     phone_body = "".join([str(random.randint(0,9)) for _ in range(7)])
     return User(
         id=id,
@@ -216,17 +226,18 @@ def random_user(id, sex_identity=None, sex_preference=None) -> User:
         sex_preference=sex_preference,
     )
 
+
 class UpdateLocationTest(TestCase):
     """ Test location update """
 
     def setUp(self):
-        self.user1 = random_user(1, 0, 1)
-        self.user2 = random_user(2, 1, 0)
+        self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
+        self.user2 = random_user(2, User.SexChoices.FEMALE, User.SexChoices.MALE)
 
         self.user1.save()
         self.user2.save()
       
-    def test_basic_location_update_returns_nearby_user(self):
+    def test_basic_location_update_near_compatible_user_matches_user(self):
         """" Both people are in the same location """
         self.user1.latitude = 0
         self.user1.longitude = 0
@@ -250,10 +261,13 @@ class UpdateLocationTest(TestCase):
         self.assertTrue(Notification.objects.filter(user=self.user1))
         self.assertTrue(Notification.objects.filter(user=self.user2))
 
+    def test_basic_location_update_near_incompatible_user_does_not_match_user(self):
+        """ Both people are in the same location, but nonmatching sexual preference """
+        pass
 
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):
-        self.user1 = random_user(1, 0, 1)
+        self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
 
         self.user1.save()
     
@@ -274,7 +288,7 @@ class PostSurveyAnswersTest(TestCase):
 
 class DeleteAccountTest(TestCase):
     def setUp(self):
-        self.user1 = random_user(1, 0, 1)
+        self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
 
         self.user1.save()
     

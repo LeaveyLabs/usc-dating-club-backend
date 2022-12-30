@@ -2,14 +2,15 @@
 import os
 
 from django.db.models import Q
+from django.db.utils import IntegrityError
 from django.core.mail import send_mail
 from django.forms import ValidationError
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework.serializers import EmailField, IntegerField, ListField, ModelSerializer, Serializer
+from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, ModelSerializer, Serializer
 from rest_framework.response import Response
 
-from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
+from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
 
 import sys
 sys.path.append(".")
@@ -113,6 +114,7 @@ class VerifyEmailCode(UpdateAPIView):
 # Send Phone Code
 class SendPhoneCodeSerializer(ModelSerializer):
     """ SendPhoneCode parameters """
+    is_registration = BooleanField(default=False)
 
     class Meta:
         """ JSON fields from PhoneAuthentication """
@@ -120,6 +122,7 @@ class SendPhoneCodeSerializer(ModelSerializer):
         fields = (
           'phone_number',
           'proxy_uuid',
+          'is_registration',
         )
 
 class SendPhoneCode(CreateAPIView):
@@ -131,9 +134,10 @@ class SendPhoneCode(CreateAPIView):
         phone_request.is_valid(raise_exception=True)
         phone_number = phone_request.data.get('phone_number')
         proxy_uuid = phone_request.data.get('proxy_uuid')
+        is_registration = phone_request.data.get('is_registration')
 
         user_matches = User.objects.filter(phone_number=phone_number)
-        if user_matches.exists():
+        if is_registration and user_matches.exists():
             return Response(
               {
                 'phone_number': 'phone number taken'
@@ -157,7 +161,7 @@ class SendPhoneCode(CreateAPIView):
             from_=twilio_phone_number,
             to=str(phone_number),
         )
-    
+
 # Verify Phone Code [and/or Login]
 class CompleteUserSerializer(ModelSerializer):
     """ Complete information about user """
@@ -339,7 +343,7 @@ class UpdateLocationSerializer(ModelSerializer):
 
 class UpdateLocation(UpdateAPIView):
     """ List nearby users to a location """
-    serializer_class = NearbyUserSerializer
+    serializer_class = UpdateLocationSerializer
 
     def update(self, request, *args, **kwargs):
         location_request = UpdateLocationSerializer(data=request.data)
@@ -392,11 +396,16 @@ class UpdateLocation(UpdateAPIView):
         not_current_user = (
           ~Q(pk=user.pk)
         )
+        sexually_preferred = (
+          Q(sex_identity=user.sex_preference)&
+          Q(sex_preference=user.sex_identity)
+        )
 
         nearby_users = User.objects.filter(
-          within_latitude &
-          within_longitude &
-          not_current_user
+          within_latitude&
+          within_longitude&
+          not_current_user&
+          sexually_preferred
         )
 
         if not nearby_users: return
@@ -407,6 +416,7 @@ class UpdateLocation(UpdateAPIView):
           user1=user,
           user2=nearby_user,
         )
+
 
 # Delete Account
 class DeleteAccountSerializer(Serializer):

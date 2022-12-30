@@ -15,13 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
+from push_notifications.api.rest_framework import APNSDeviceViewSet
 from rest_framework import routers
 
 from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
 
 router = routers.DefaultRouter()
-router.register("devices", APNSDeviceAuthorizedViewSet)
+router.register("devices", APNSDeviceViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

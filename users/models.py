@@ -23,11 +23,17 @@ def random_code() -> str:
 class User(AbstractUser):
     """ User class extension """
 
+    class SexChoices:
+        MALE = 'm'
+        FEMALE = 'f'
+        BOTH = 'b'
+        OTHER = 'o'
+
     SEX_CHOICES = (
-      (0, 'MALE'),
-      (1, 'FEMALE'),
-      (2, 'BOTH'),
-      (3, 'OTHER'),
+      (SexChoices.MALE, 'MALE'),
+      (SexChoices.FEMALE, 'FEMALE'),
+      (SexChoices.BOTH, 'BOTH'),
+      (SexChoices.OTHER, 'OTHER'),
     )
 
     email = models.EmailField(unique=True)
@@ -40,7 +46,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs) -> None:
         """ Overrides username and password generation """
-        self.username = self.username if self.username else uuid4()
+        self.username = self.email
         self.password = self.password if self.password else uuid4()
         return super().save(*args, **kwargs)
 
@@ -56,17 +62,15 @@ class Match(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         """ Order the users and notify each of them """
-        if self.user1.email < self.user2.email:
-            tmp = User(self.user1)
-            self.user1 = self.user2
-            self.user2 = tmp
+        self.user1, self.user2 = sorted([self.user1, self.user2], key=lambda user: user.email)
         super().save(*args, **kwargs)
         self.send_notifications()
     
     def has_expired(self):
-        return timezone.now().timestamp > self.time.timestamp + timedelta(days=2)
+        return timezone.now() - self.time > timedelta(days=2)
     
     def send_notifications(self):
+        print(self.user1.first_name, self.user2.first_name)
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
@@ -126,7 +130,7 @@ class Notification(models.Model):
         (Choices.MATCH, Choices.MATCH),
     )
 
-    user = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="notifications", on_delete=models.CASCADE)
     type = models.CharField(max_length=15, choices=NOTIFICATION_OPTIONS,)
     message = models.TextField()
     data = models.JSONField(null=True, blank=True)
