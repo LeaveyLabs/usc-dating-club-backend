@@ -400,12 +400,19 @@ class UpdateLocation(UpdateAPIView):
           Q(sex_identity=user.sex_preference)&
           Q(sex_preference=user.sex_identity)
         )
+        not_matched_before = (
+          ~Q(match1__user1=user)&
+          ~Q(match1__user2=user)&
+          ~Q(match2__user1=user)&
+          ~Q(match2__user2=user)
+        )
 
         nearby_users = User.objects.filter(
           within_latitude&
           within_longitude&
           not_current_user&
-          sexually_preferred
+          sexually_preferred&
+          not_matched_before
         )
 
         if not nearby_users: return
