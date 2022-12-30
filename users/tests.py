@@ -6,8 +6,8 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import EmailAuthentication, PhoneAuthentication, Question, User
-from users.views import DeleteAccount, NearbyUserSerializer, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
+from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
+from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -235,17 +235,20 @@ class UpdateLocationTest(TestCase):
         request = APIRequestFactory().put(
           path='update-location/',
           data={
-            'email': self.user1.email,
+            'email': self.user2.email,
             'latitude': 0,
             'longitude': 0,
           }
         )
         response = UpdateLocation.as_view()(request)
 
-        expected_json = [NearbyUserSerializer(self.user1).data]
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_json)
+        self.assertTrue(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertTrue(Notification.objects.filter(user=self.user1))
+        self.assertTrue(Notification.objects.filter(user=self.user2))
 
 
 class PostSurveyAnswersTest(TestCase):

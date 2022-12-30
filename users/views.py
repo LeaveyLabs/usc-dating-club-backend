@@ -349,10 +349,35 @@ class UpdateLocation(UpdateAPIView):
         latitude = location_request.data.get('latitude')
         longitude = location_request.data.get('longitude')
 
-        User.objects.filter(email=email).update(
+        updated_users = User.objects.filter(email=email)
+        updated_users.update(
           latitude=latitude,
           longitude=longitude,
         )
+
+        if not updated_users:
+            return Response(
+              {
+                'email': 'email not found',
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated_user = updated_users[0]
+
+        self.match_with_nearby_users(updated_user, latitude, longitude)
+
+        return Response(
+          location_request.data,
+          status.HTTP_200_OK,
+        )
+
+    def match_with_nearby_users(self, user, latitude, longitude) -> None:
+        """ Check if the match window has not expired. 
+        If not, match with a nearby user. """
+        past_matches = Q(user1=user) | Q(user2=user)
+        matches = Match.objects.filter(past_matches).order_by('-time')
+        if matches and matches[0].has_expired(): return
 
         within_latitude = (
           Q(latitude__isnull=False)&
@@ -364,75 +389,24 @@ class UpdateLocation(UpdateAPIView):
           Q(longitude__lte=longitude+.001)&
           Q(longitude__gte=longitude-.001)
         )
+        not_current_user = (
+          ~Q(pk=user.pk)
+        )
 
         nearby_users = User.objects.filter(
-          within_latitude & within_longitude
-        )
-        nearby_users_list = [
-          NearbyUserSerializer(nearby_user).data
-          for nearby_user in nearby_users
-        ]
-        return Response(
-          nearby_users_list,
-          status.HTTP_200_OK,
+          within_latitude &
+          within_longitude &
+          not_current_user
         )
 
-# Match Users
-class MatchUsersSerializer(Serializer):
-    """ MatchUsers parameters """
-    email1 = EmailField()
-    email2 = EmailField()
+        if not nearby_users: return
 
-class MatchUsers(CreateAPIView):
-    """ Matches two users """
-    serializer_class = MatchUsersSerializer
-    
-    def create(self, request, *args, **kwargs):
-        match_request = MatchUsersSerializer(data=request.data)
-        match_request.is_valid()
+        nearby_user = nearby_users[0]
 
-        email1 = match_request.data.get('email1')
-        email2 = match_request.data.get('email2')
-        [email1, email2] = sorted([email1, email2])
-
-        user1 = User.objects.filter(email=email1)
-        user2 = User.objects.filter(email=email2)
-
-        if not user1.exists() or not user2.exists():
-            return Response(
-              {
-                'email1': 'email1 or email2 does not exist',
-                'email2': 'email1 or email2 does not exist',
-              },
-              status.HTTP_400_BAD_REQUEST,
-            )
-
-        Match.objects.create(user1=user1, user2=user2)
-        self.send_match_notification(user1, user2, match_request.data)
-
-        return Response(
-          match_request.data,
-          status.HTTP_201_CREATED,
+        Match.objects.create(
+          user1=user,
+          user2=nearby_user,
         )
-
-    def send_match_notification(self, user1, user2, match_data) -> None:
-        Notification.objects.bulk_create([
-          Notification(
-            user=user1,
-            type=Notification.Choices.MATCH,
-            message=self.match_message(user1.first_name, user2.first_name),
-            data=match_data,
-          ),
-          Notification(
-            user=user2,
-            type=Notification.Choices.MATCH,
-            message=self.match_message(user2.first_name, user1.first_name),
-            data=match_data,
-          ),
-        ])
-      
-    def match_message(self, receiver_name, sender_name) -> str:
-        return f'{receiver_name}, you matched with {sender_name}!'
 
 # Delete Account
 class DeleteAccountSerializer(Serializer):
