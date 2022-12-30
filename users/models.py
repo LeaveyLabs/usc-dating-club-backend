@@ -41,8 +41,8 @@ class User(AbstractUser):
     sex_identity = models.TextField(choices=SEX_CHOICES)
     sex_preference = models.TextField(choices=SEX_CHOICES)
 
-    latitude = models.FloatField(null=True)
-    longitude = models.FloatField(null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def save(self, *args, **kwargs) -> None:
         """ Overrides username and password generation """
@@ -120,6 +120,13 @@ class PhoneAuthentication(models.Model):
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
 
+class NotificationManager(models.Manager):
+    def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
+        notifications = super().bulk_create(objs, batch_size, ignore_conflicts)
+        for notification in notifications:
+            notification.send_to_device()
+        return notifications
+
 class Notification(models.Model):
     """ Wrapper for APNS Notifications """
     class Choices:
@@ -129,14 +136,15 @@ class Notification(models.Model):
         (Choices.MATCH, Choices.MATCH),
     )
 
+    objects = NotificationManager()
+
     user = models.ForeignKey(User, related_name="notifications", on_delete=models.CASCADE)
     type = models.CharField(max_length=15, choices=NOTIFICATION_OPTIONS,)
     message = models.TextField()
     data = models.JSONField(null=True, blank=True)
     time = models.DateTimeField(default=timezone.now)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    def send_to_device(self) -> None:
         APNSDevice.objects.filter(user=self.user).send_message(
             self.message,
             extra={
