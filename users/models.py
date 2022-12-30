@@ -70,7 +70,6 @@ class Match(models.Model):
         return timezone.now() - self.time > timedelta(days=2)
     
     def send_notifications(self):
-        print(self.user1.first_name, self.user2.first_name)
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
