@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.core.mail import send_mail
 from django.forms import ValidationError
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, ModelSerializer, Serializer
@@ -212,7 +213,9 @@ class VerifyPhoneCode(UpdateAPIView):
               },
               status.HTTP_400_BAD_REQUEST
             )
-        
+
+        matches.update(is_verified=True)
+
         users = User.objects.filter(phone_number=phone_number)
         if users.exists():
             user = users[0]
@@ -220,8 +223,7 @@ class VerifyPhoneCode(UpdateAPIView):
               CompleteUserSerializer(user).data,
               status.HTTP_200_OK,
             )
-        
-        matches.update(is_verified=True)
+
         return Response(code_request.data, status.HTTP_200_OK)
 
 # Register User
@@ -357,6 +359,7 @@ class UpdateLocation(UpdateAPIView):
         updated_users.update(
           latitude=latitude,
           longitude=longitude,
+          loc_update_time=timezone.now()
         )
 
         if not updated_users:
@@ -406,13 +409,18 @@ class UpdateLocation(UpdateAPIView):
           ~Q(match2__user1=user)&
           ~Q(match2__user2=user)
         )
+        recent_update = (
+          Q(loc_update_time__lte=timezone.now())&
+          Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
+        )
 
         nearby_users = User.objects.filter(
           within_latitude&
           within_longitude&
           not_current_user&
           sexually_preferred&
-          not_matched_before
+          not_matched_before&
+          recent_update
         )
 
         if not nearby_users: return

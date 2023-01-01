@@ -2,12 +2,13 @@
 import random
 from django.core import mail
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
-from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -101,9 +102,34 @@ class VerifyEmailCodeTest(TestCase):
 
 class SendPhoneCodeTest(TestCase):
     """ Test text sender API """
+    def setUp(self) -> None:
+        TwilioTestClientMessages.created = []
+        return super().setUp()
 
-    def test_basic_phone_number_sends_code(self):
+    def test_basic_phone_number_sends_code(self) -> None:
         """ Verify +13108741292 """
+        request = APIRequestFactory().post(
+          path="send-phone-code/",
+          data={
+              "phone_number": "+13108741292",
+              "proxy_uuid": uuid4(),
+              "is_registration": True,
+          }
+        )
+        response = SendPhoneCode.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(TwilioTestClientMessages.created), 1)
+        self.assertTrue(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
+
+    def test_duplicate_phone_number_without_registration_sends_code(self) -> None:
+        """ Verify +13108741292 """
+        PhoneAuthentication.objects.create(
+          phone_number="+13108741292",
+          proxy_uuid=uuid4()
+        )
+        User.objects.create(phone_number="+13108741292")
+        
         request = APIRequestFactory().post(
           path="send-phone-code/",
           data={
@@ -116,12 +142,26 @@ class SendPhoneCodeTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(TwilioTestClientMessages.created), 1)
         self.assertTrue(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
-
-    def test_duplicate_phone_number_without_registration_sends_code(self):
-        pass
     
-    def test_duplicate_phone_number_with_registration_does_not_send_code(self):
-        pass
+    def test_duplicate_phone_number_with_registration_does_not_send_code(self) -> None:
+        PhoneAuthentication.objects.create(
+          phone_number="+13108741292",
+          proxy_uuid=uuid4()
+        )
+        User.objects.create(phone_number="+13108741292")
+        
+        request = APIRequestFactory().post(
+          path="send-phone-code/",
+          data={
+              "phone_number": "+13108741292",
+              "proxy_uuid": uuid4(),
+              "is_registration": True,
+          }
+        )
+        response = SendPhoneCode.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(TwilioTestClientMessages.created), 0)
 
 
 class VerifyPhoneCodeTest(TestCase):
@@ -160,7 +200,29 @@ class VerifyPhoneCodeTest(TestCase):
         self.assertTrue(phone_auth.is_verified)
 
     def test_verifying_existing_phone_number_returns_user(self):
-        pass
+        """ Verify +13108741292 with 123456 """
+        user = User.objects.create(phone_number=self.basic_phone_number)
+        user_json = CompleteUserSerializer(user).data
+
+        request = APIRequestFactory().put(
+          path='verify-phone-code/',
+          data={
+            'phone_number': self.basic_phone_number,
+            'code': self.basic_code,
+            'proxy_uuid': self.basic_uuid,
+          }
+        )
+        response = VerifyPhoneCode.as_view()(request)
+
+        phone_auth = PhoneAuthentication.objects.get(
+          phone_number=self.basic_phone_number,
+          code=self.basic_code,
+          proxy_uuid=self.basic_uuid,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(phone_auth.is_verified)
+        self.assertTrue(response.data, user_json)
 
 
 class RegisterUserTest(TestCase):
@@ -263,7 +325,59 @@ class UpdateLocationTest(TestCase):
 
     def test_basic_location_update_near_incompatible_user_does_not_match_user(self):
         """ Both people are in the same location, but nonmatching sexual preference """
-        pass
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.sex_identity = 'm'
+        self.user1.sex_preference = 'f'
+
+        self.user2.sex_identity = 'm'
+        self.user2.sex_preference = 'f'
+
+        self.user1.save()
+        self.user2.save()
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0,
+            'longitude': 0,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertFalse(Notification.objects.filter(user=self.user1))
+        self.assertFalse(Notification.objects.filter(user=self.user2))
+
+    def test_old_location_update_does_not_match_user(self) -> None:
+        """ Try to match with a user who updated their location yesterday """
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.loc_update_time = timezone.now() - timezone.timedelta(days=1)
+        self.user1.save()
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0,
+            'longitude': 0,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertFalse(Notification.objects.filter(user=self.user1))
+        self.assertFalse(Notification.objects.filter(user=self.user2))
 
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):
