@@ -27,13 +27,11 @@ class User(AbstractUser):
         MALE = 'm'
         FEMALE = 'f'
         BOTH = 'b'
-        OTHER = 'o'
 
     SEX_CHOICES = (
       (SexChoices.MALE, 'MALE'),
       (SexChoices.FEMALE, 'FEMALE'),
       (SexChoices.BOTH, 'BOTH'),
-      (SexChoices.OTHER, 'OTHER'),
     )
 
     email = models.EmailField(unique=True)
