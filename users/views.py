@@ -162,6 +162,7 @@ class CompleteUserSerializer(ModelSerializer):
         fields = (
           'id',
           'email',
+          'phone_number',
           'first_name',
           'last_name',
           'sex_identity',
