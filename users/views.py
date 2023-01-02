@@ -135,16 +135,6 @@ class SendPhoneCode(CreateAPIView):
         phone_request.is_valid(raise_exception=True)
         phone_number = phone_request.data.get('phone_number')
         proxy_uuid = phone_request.data.get('proxy_uuid')
-        is_registration = phone_request.data.get('is_registration')
-
-        user_matches = User.objects.filter(phone_number=phone_number)
-        if is_registration and user_matches.exists():
-            return Response(
-              {
-                'phone_number': 'phone number taken'
-              },
-              status.HTTP_400_BAD_REQUEST,
-            )
 
         PhoneAuthentication.objects.filter(phone_number=phone_number).delete()
         phone_auth = PhoneAuthentication.objects.create(

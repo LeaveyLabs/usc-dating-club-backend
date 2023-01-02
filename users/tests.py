@@ -122,47 +122,6 @@ class SendPhoneCodeTest(TestCase):
         self.assertEqual(len(TwilioTestClientMessages.created), 1)
         self.assertTrue(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
 
-    def test_duplicate_phone_number_without_registration_sends_code(self) -> None:
-        """ Verify +13108741292 """
-        PhoneAuthentication.objects.create(
-          phone_number="+13108741292",
-          proxy_uuid=uuid4()
-        )
-        User.objects.create(phone_number="+13108741292")
-        
-        request = APIRequestFactory().post(
-          path="send-phone-code/",
-          data={
-              "phone_number": "+13108741292",
-              "proxy_uuid": uuid4(),
-          }
-        )
-        response = SendPhoneCode.as_view()(request)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(TwilioTestClientMessages.created), 1)
-        self.assertTrue(PhoneAuthentication.objects.filter(phone_number="+13108741292"))
-    
-    def test_duplicate_phone_number_with_registration_does_not_send_code(self) -> None:
-        PhoneAuthentication.objects.create(
-          phone_number="+13108741292",
-          proxy_uuid=uuid4()
-        )
-        User.objects.create(phone_number="+13108741292")
-        
-        request = APIRequestFactory().post(
-          path="send-phone-code/",
-          data={
-              "phone_number": "+13108741292",
-              "proxy_uuid": uuid4(),
-              "is_registration": True,
-          }
-        )
-        response = SendPhoneCode.as_view()(request)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(TwilioTestClientMessages.created), 0)
-
 
 class VerifyPhoneCodeTest(TestCase):
     """ Test phone verifier API """
