@@ -52,7 +52,7 @@ class SendEmailCode(CreateAPIView):
         if user_matches.exists():
             return Response(
               {
-                'email': 'email taken'
+                'email': ['email taken']
               },
               status.HTTP_400_BAD_REQUEST,
             )
@@ -105,7 +105,7 @@ class VerifyEmailCode(UpdateAPIView):
         if not matches.exists():
             return Response(
               {
-                'code': 'code does not match'
+                'code': ['code does not match']
               },
               status.HTTP_400_BAD_REQUEST)
 
@@ -200,7 +200,7 @@ class VerifyPhoneCode(UpdateAPIView):
         if not matches.exists():
             return Response(
               {
-                'code': 'code does not match'
+                'code': ['code does not match']
               },
               status.HTTP_400_BAD_REQUEST
             )
@@ -255,8 +255,8 @@ class RegisterUser(CreateAPIView):
         if not phone_match.exists() or not email_match.exists():
             return Response(
               {
-                'phone_number': 'unregistered phone',
-                'email': 'unregistered email',
+                'phone_number': ['unregistered phone'],
+                'email': ['unregistered email'],
               },
               status.HTTP_400_BAD_REQUEST
             )
@@ -264,8 +264,8 @@ class RegisterUser(CreateAPIView):
         if phone_match[0].proxy_uuid != email_match[0].proxy_uuid:
             return Response(
               {
-                'phone_number': 'phone does not match email',
-                'email': 'email does not match phone',
+                'phone_number': ['phone does not match email'],
+                'email': ['email does not match phone'],
               },
               status.HTTP_400_BAD_REQUEST
             )
@@ -292,7 +292,7 @@ class PostSurveyAnswers(CreateAPIView):
         if not user_matches:
             return Response(
               {
-                'email': 'email does not exist'
+                'email': ['email does not exist']
               },
               status.HTTP_400_BAD_REQUEST,
             )
@@ -356,7 +356,7 @@ class UpdateLocation(UpdateAPIView):
         if not updated_users:
             return Response(
               {
-                'email': 'email not found',
+                'email': ['email not found'],
               },
               status.HTTP_400_BAD_REQUEST,
             )
