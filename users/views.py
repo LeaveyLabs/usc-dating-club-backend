@@ -8,7 +8,7 @@ from django.forms import ValidationError
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, ModelSerializer, Serializer
+from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer
 from rest_framework.response import Response
 
 from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
@@ -273,10 +273,14 @@ class RegisterUser(CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 # Post Survey Answers
+class SurveyResponseSerializer(Serializer):
+    category = CharField()
+    answer = IntegerField()
+
 class PostSurveyAnswersSerializer(Serializer):
     """ PostSurveyAnswers parameters """
     email = EmailField()
-    responses = ListField(child=IntegerField())
+    responses = ListField(child=SurveyResponseSerializer())
 
 class PostSurveyAnswers(CreateAPIView):
     """ Post survey answers """
@@ -298,10 +302,10 @@ class PostSurveyAnswers(CreateAPIView):
             )
         user_match = user_matches[0]
         
-        for q_type, q_answer in enumerate(q_responses):
+        for q_response in q_responses:
             Question.objects.create(
-              type=q_type,
-              answer=q_answer,
+              category=q_response.get('category'),
+              answer=q_response.get('answer'),
               user=user_match,
             )
         

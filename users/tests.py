@@ -345,18 +345,32 @@ class PostSurveyAnswersTest(TestCase):
         self.user1.save()
     
     def test_basic_survey_answers_should_create_questions(self):
-        """ Post (0-9, 1-5) tuples with an existing user """
+        """ Post (0-2, 1-3) tuples with an existing user """
         request = APIRequestFactory().post(
           path='post-survey-answers/',
           data={
             'email': self.user1.email,
-            'responses': [1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
-          }
+            'responses': [
+              {
+                'category': 0,
+                'answer': 1,
+              },
+              {
+                'category': 1,
+                'answer': 2,
+              },
+              {
+                'category': 2,
+                'answer': 3,
+              }
+            ]
+          },
+          format='json',
         )
         response = PostSurveyAnswers.as_view()(request)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(Question.objects.filter(user=self.user1)), 10)
+        self.assertEqual(len(Question.objects.filter(user=self.user1)), 3)
 
 
 class DeleteAccountTest(TestCase):

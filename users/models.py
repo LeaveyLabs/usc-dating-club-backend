@@ -101,7 +101,7 @@ class Question(models.Model):
       (0,  'What time do you sleep at night?'),
     )
 
-    type = models.TextField(choices=QUESTION_CHOICES)
+    category = models.TextField(choices=QUESTION_CHOICES)
     answer = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
