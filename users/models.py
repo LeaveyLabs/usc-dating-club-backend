@@ -55,6 +55,8 @@ class Match(models.Model):
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match2")
     time = models.DateTimeField(default=timezone.now)
 
+    MATCH_SOUND = "matchsound.wav"
+
     class Meta:
         """ Two users cannot match more than once """
         unique_together = ('user1', 'user2', )
@@ -75,12 +77,14 @@ class Match(models.Model):
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
             data=self.notifcation_payload(self.user1, self.user2),
+            sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.notifcation_payload(self.user1, self.user2)
+            data=self.notifcation_payload(self.user1, self.user2),
+            sound=self.MATCH_SOUND,
           ),
         ])
 
@@ -142,6 +146,7 @@ class Notification(models.Model):
     message = models.TextField()
     data = models.JSONField(null=True, blank=True)
     time = models.DateTimeField(default=timezone.now)
+    sound = models.TextField(null=True)
 
     def send_to_device(self) -> None:
         APNSDevice.objects.filter(user=self.user).send_message(
@@ -149,5 +154,6 @@ class Notification(models.Model):
             extra={
                 "type": self.type,
                 "data": self.data,
+                "sound": self.sound
             }
         )
