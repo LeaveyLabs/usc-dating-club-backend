@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,13 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-=zq&v62pn(6dt2yaa@5jrnjx5475f1ve5243tb%u$e_mtc#nbb"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # Application definition
 
@@ -37,6 +31,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "phonenumber_field",
+    "push_notifications",
+    "rest_framework",
+    # "rest_framework.authtoken",
     "users",
 ]
 
@@ -69,18 +67,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "backend.wsgi.application"
-
-
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -117,6 +103,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -125,3 +112,50 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Default user model
 AUTH_USER_MODEL = 'users.User'
+
+# Email details
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = f'usc dating club <{os.environ.get("EMAIL_HOST_USER")}>'
+
+apns_file_name = os.path.join(BASE_DIR, 'auth_key.p8')
+if os.environ.get('APNS_AUTH_KEY_FILE_TEXT'):
+    # create auth key file from ENV var
+    from tempfile import NamedTemporaryFile
+    import atexit
+    apns_file = NamedTemporaryFile(delete=False)
+    apns_file.write(bytes(os.environ.get('APNS_AUTH_KEY_FILE_TEXT'), 'UTF-8'))
+    apns_file.close()
+    apns_file_name = apns_file.name
+
+    def unlink_apns_file():
+        os.unlink(apns_file_name)
+    atexit.register(unlink_apns_file)  # remove auth key file on exit
+
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "APNS_AUTH_KEY_PATH": apns_file_name,
+    "APNS_AUTH_KEY_ID": os.environ.get('APNS_AUTH_KEY_ID'),
+    "APNS_TEAM_ID": os.environ.get('APNS_TEAM_ID'),
+    "APNS_TOPIC": os.environ.get('APNS_TOPIC'),
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+    "UNIQUE_REG_ID": True,
+    "APNS_USE_SANDBOX": os.environ.get("APNS_USE_SANDBOX"),
+}
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework.authentication.TokenAuthentication',
+#     ],
+#     'DEFAULT_THROTTLE_CLASSES': [
+#         'rest_framework.throttling.AnonRateThrottle',
+#         'rest_framework.throttling.UserRateThrottle'
+#     ],
+#     'DEFAULT_THROTTLE_RATES': {
+#         'anon': '50/minute',
+#         'user': '200/minute'
+#     },
+# }
