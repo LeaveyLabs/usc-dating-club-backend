@@ -77,14 +77,14 @@ class Match(models.Model):
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.notifcation_payload(self.user1, self.user2),
+            data=self.notifcation_payload(self.user2),
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.notifcation_payload(self.user1, self.user2),
+            data=self.notifcation_payload(self.user1),
             sound=self.MATCH_SOUND,
           ),
         ])
@@ -92,10 +92,10 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def notifcation_payload(self, user1, user2) -> dict:
+    def notifcation_payload(self, user) -> dict:
         return {
-            'user1_id': user1.id,
-            'user2_id': user2.id,
+            'id': user.id,
+            'first_name': user.first_name,
         }
     
 
