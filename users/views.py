@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 from django.core.mail import send_mail
 from django.forms import ValidationError
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer, SerializerMethodField
 from rest_framework.response import Response
@@ -282,6 +282,14 @@ class RegisterUser(CreateAPIView):
             )
         
         return super().create(request, *args, **kwargs)
+
+# Update User
+class UserViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing user instances.
+    """
+    serializer_class = CompleteUserSerializer
+    queryset = User.objects.all()
 
 # Post Survey Answers
 class SurveyResponseSerializer(Serializer):

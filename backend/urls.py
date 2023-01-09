@@ -18,10 +18,11 @@ from django.urls import path
 from push_notifications.api.rest_framework import APNSDeviceViewSet
 from rest_framework import routers
 
-from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, UserViewset, VerifyEmailCode, VerifyPhoneCode
 
 router = routers.DefaultRouter()
 router.register("devices", APNSDeviceViewSet)
+router.register("users", UserViewset)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
