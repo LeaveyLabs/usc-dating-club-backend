@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
-from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -255,6 +255,9 @@ class UpdateLocationTest(TestCase):
         self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
         self.user2 = random_user(2, User.SexChoices.FEMALE, User.SexChoices.MALE)
 
+        self.user1.is_matchable = True
+        self.user2.is_matchable = True
+
         self.user1.save()
         self.user2.save()
       
@@ -391,3 +394,24 @@ class DeleteAccountTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=self.user1.id))
+
+class UpdateMatchableStatusTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
+
+        self.user1.save()
+    
+    def test_basic_activate_matchable_status(self):
+        """ Update is_matchable to True """
+        request = APIRequestFactory().patch(
+          path='update-matchable-status',
+          data={
+            'email': self.user1.email,
+            'is_matchable': True,
+          }
+        )
+        response = UpdateMatchableStatus.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(User.objects.get(id=self.user1.id).is_matchable)
+        

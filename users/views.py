@@ -8,7 +8,7 @@ from django.forms import ValidationError
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
-from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer
+from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer, SerializerMethodField
 from rest_framework.response import Response
 
 from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
@@ -156,6 +156,8 @@ class SendPhoneCode(CreateAPIView):
 # Verify Phone Code [and/or Login]
 class CompleteUserSerializer(ModelSerializer):
     """ Complete information about user """
+    survey_responses = SerializerMethodField()
+
     class Meta:
         """ JSON fields from User """
         model = User
@@ -167,7 +169,16 @@ class CompleteUserSerializer(ModelSerializer):
           'last_name',
           'sex_identity',
           'sex_preference',
+          'survey_responses',
         )
+
+    def get_survey_responses(self, obj):
+        try: obj.questions
+        except: obj.questions = Question.objects.filter(user_id=self.id)
+        return [
+          SurveyResponseSerializer(question).data 
+          for question in obj.questions.all()
+        ]
 
 class VerifyPhoneCodeSerializer(ModelSerializer):
     """ VerifyPhoneCode parameters """
@@ -367,7 +378,8 @@ class UpdateLocation(UpdateAPIView):
 
         updated_user = updated_users[0]
 
-        self.match_with_nearby_users(updated_user, latitude, longitude)
+        if updated_user.is_matchable:
+            self.match_with_nearby_users(updated_user, latitude, longitude)
 
         return Response(
           location_request.data,
@@ -375,8 +387,10 @@ class UpdateLocation(UpdateAPIView):
         )
 
     def match_with_nearby_users(self, user, latitude, longitude) -> None:
-        """ Check if the match window has not expired. 
-        If not, match with a nearby user. """
+        """ 
+        Check if the match window has not expired. 
+        If not, match with a nearby user. 
+        """
         past_matches = Q(user1=user) | Q(user2=user)
         matches = Match.objects.filter(past_matches).order_by('-time')
         if matches and matches[0].has_expired(): return
@@ -408,6 +422,9 @@ class UpdateLocation(UpdateAPIView):
           Q(loc_update_time__lte=timezone.now())&
           Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
         )
+        is_matchable = (
+          Q(is_matchable=True)
+        )
 
         nearby_users = User.objects.filter(
           within_latitude&
@@ -415,7 +432,8 @@ class UpdateLocation(UpdateAPIView):
           not_current_user&
           sexually_preferred&
           not_matched_before&
-          recent_update
+          recent_update&
+          is_matchable
         )
 
         if not nearby_users: return
@@ -445,3 +463,36 @@ class DeleteAccount(DestroyAPIView):
         User.objects.filter(email=email).delete()
 
         return Response(delete_request.data, status.HTTP_204_NO_CONTENT)
+
+# Deactivate Matches
+class UpdateMatchableStatusSerializer(Serializer):
+    email = EmailField()
+    is_matchable = BooleanField()
+
+class UpdateMatchableStatus(UpdateAPIView):
+    """ Update whether the user is matchable """
+    serializer_class = UpdateMatchableStatusSerializer
+
+    def update(self, request, *args, **kwargs):
+        matchable_request = UpdateMatchableStatusSerializer(data=request.data)
+        matchable_request.is_valid(raise_exception=True)
+        email = matchable_request.data.get('email')
+        is_matchable = matchable_request.data.get('is_matchable')
+
+        updated_users = User.objects.filter(email=email)
+        updated_users.update(
+          is_matchable=is_matchable,
+        )
+
+        if not updated_users:
+            return Response(
+              {
+                'email': ['email not found'],
+              },
+              status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+          matchable_request.data,
+          status.HTTP_200_OK,
+        )

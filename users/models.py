@@ -42,6 +42,7 @@ class User(AbstractUser):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     loc_update_time = models.DateTimeField(default=timezone.now)
+    is_matchable = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs) -> None:
         """ Overrides username and password generation """
@@ -107,7 +108,7 @@ class Question(models.Model):
 
     category = models.TextField(choices=QUESTION_CHOICES)
     answer = models.IntegerField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="questions", on_delete=models.CASCADE)
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
