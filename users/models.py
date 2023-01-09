@@ -68,10 +68,10 @@ class Match(models.Model):
         super().save(*args, **kwargs)
         self.send_notifications()
     
-    def has_expired(self):
+    def has_expired(self) -> bool:
         return timezone.now() - self.time > timedelta(days=2)
     
-    def send_notifications(self):
+    def send_notifications(self) -> None:
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
@@ -92,7 +92,7 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def notifcation_payload(self, user1, user2):
+    def notifcation_payload(self, user1, user2) -> dict:
         return {
             'user1_id': user1.id,
             'user2_id': user2.id,
