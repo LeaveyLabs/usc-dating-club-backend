@@ -48,6 +48,8 @@ class User(AbstractUser):
         """ Overrides username and password generation """
         self.username = self.email
         self.password = self.password if self.password else uuid4()
+        self.first_name = self.first_name.lower()
+        self.last_name = self.last_name.lower()
         return super().save(*args, **kwargs)
 
 class Match(models.Model):
