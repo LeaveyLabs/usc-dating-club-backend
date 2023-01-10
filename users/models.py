@@ -71,7 +71,7 @@ class Match(models.Model):
         self.send_notifications()
     
     def has_expired(self) -> bool:
-        return timezone.now() - self.time > timedelta(days=2)
+        return (timezone.now() - self.time) > timedelta(days=2)
     
     def send_notifications(self) -> None:
         Notification.objects.bulk_create([
