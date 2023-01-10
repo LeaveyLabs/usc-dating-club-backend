@@ -42,6 +42,7 @@ class User(AbstractUser):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     loc_update_time = models.DateTimeField(default=timezone.now)
+    is_matchable = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs) -> None:
         """ Overrides username and password generation """
@@ -67,23 +68,23 @@ class Match(models.Model):
         super().save(*args, **kwargs)
         self.send_notifications()
     
-    def has_expired(self):
+    def has_expired(self) -> bool:
         return timezone.now() - self.time > timedelta(days=2)
     
-    def send_notifications(self):
+    def send_notifications(self) -> None:
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.notifcation_payload(self.user1, self.user2),
+            data=self.notifcation_payload(self.user2),
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.notifcation_payload(self.user1, self.user2),
+            data=self.notifcation_payload(self.user1),
             sound=self.MATCH_SOUND,
           ),
         ])
@@ -91,10 +92,10 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def notifcation_payload(self, user1, user2):
+    def notifcation_payload(self, user) -> dict:
         return {
-            'user1_id': user1.id,
-            'user2_id': user2.id,
+            'id': user.id,
+            'first_name': user.first_name,
         }
     
 
@@ -107,7 +108,7 @@ class Question(models.Model):
 
     category = models.TextField(choices=QUESTION_CHOICES)
     answer = models.IntegerField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="questions", on_delete=models.CASCADE)
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
