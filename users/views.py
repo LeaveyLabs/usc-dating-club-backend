@@ -170,6 +170,7 @@ class CompleteUserSerializer(ModelSerializer):
           'sex_identity',
           'sex_preference',
           'survey_responses',
+          'is_matchable',
         )
 
     def get_survey_responses(self, obj):
