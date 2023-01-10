@@ -225,8 +225,8 @@ class RegisterUserTest(TestCase):
         self.assertTrue(User.objects.filter(
           email=self.basic_email,
           phone_number=self.basic_phone_number,
-          first_name=self.basic_first_name,
-          last_name=self.basic_last_name,
+          first_name__iexact=self.basic_first_name,
+          last_name__iexact=self.basic_last_name,
           sex_identity=self.basic_sex_identity,
           sex_preference=self.basic_sex_preference,
         ))
