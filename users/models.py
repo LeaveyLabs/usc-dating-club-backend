@@ -56,6 +56,10 @@ class Match(models.Model):
     """ Match between two users """
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match1")
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match2")
+    user1_accepted = models.BooleanField(default=False)
+    user2_accepted = models.BooleanField(default=False)
+    initial_notification_sent = models.BooleanField(default=False)
+    accept_notification_sent = models.BooleanField(default=False)
     time = models.DateTimeField(default=timezone.now)
 
     MATCH_SOUND = "matchsound.wav"
@@ -67,37 +71,71 @@ class Match(models.Model):
     def save(self, *args, **kwargs) -> None:
         """ Order the users and notify each of them """
         self.user1, self.user2 = sorted([self.user1, self.user2], key=lambda user: user.email)
+
+        if not self.initial_notification_sent:
+            self.send_initial_match_notifications()
+            self.initial_notification_sent = True
+
+        if (not self.accept_notification_sent
+            and self.user1_accepted
+            and self.user2_accepted):
+            self.send_accept_match_notifications()
+            self.accept_notification_sent = True
+
         super().save(*args, **kwargs)
-        self.send_notifications()
     
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
     
-    def send_notifications(self) -> None:
+    def send_initial_match_notifications(self) -> None:
+        """ Notifies users that they've been matched """
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.notifcation_payload(self.user2),
+            data=self.initial_match_payload(self.user2),
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.notifcation_payload(self.user1),
+            data=self.initial_match_payload(self.user1),
             sound=self.MATCH_SOUND,
+          ),
+        ])
+    
+    def send_accept_match_notifications(self) -> None:
+        """ Notifies users that their match was accepted """
+        Notification.objects.bulk_create([
+          Notification(
+            user=self.user1,
+            type=Notification.Choices.ACCEPT,
+            data=self.accept_match_payload(self.user2),
+          ),
+          Notification(
+            user=self.user2,
+            type=Notification.Choices.ACCEPT,
+            data=self.accept_match_payload(self.user1),
           ),
         ])
 
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def notifcation_payload(self, user) -> dict:
+    def initial_match_payload(self, user) -> dict:
         return {
             'id': user.id,
             'first_name': user.first_name,
+            'email': user.email,
+        }
+
+    def accept_match_payload(self, user) -> dict:
+        return {
+            'id': user.id,
+            'first_name': user.first_name,
+            'email': user.email,
         }
     
 
@@ -137,9 +175,11 @@ class Notification(models.Model):
     """ Wrapper for APNS Notifications """
     class Choices:
         MATCH = "match"
+        ACCEPT = "accept"
     
     NOTIFICATION_OPTIONS = (
         (Choices.MATCH, Choices.MATCH),
+        (Choices.ACCEPT, Choices.ACCEPT),
     )
 
     objects = NotificationManager()

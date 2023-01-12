@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
-from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchAcceptance, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -414,4 +414,28 @@ class UpdateMatchableStatusTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(User.objects.get(id=self.user1.id).is_matchable)
+
+class UpdateMatchAcceptanceTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
+        self.user2 = random_user(2, User.SexChoices.FEMALE, User.SexChoices.MALE)
+
+        self.user1.save()
+        self.user2.save()
+
+        Match.objects.create(user1=self.user1, user2=self.user2)
+    
+    def test_basic_match_acceptance(self):
+        """ Update user1_accepted to True """
+        request = APIRequestFactory().patch(
+          path='update-match-acceptance',
+          data={
+            'user_id': self.user1.id,
+            'partner_id': self.user2.id,
+          }
+        )
+        response = UpdateMatchAcceptance.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Match.objects.get(user1_id=self.user1.id).user1_accepted)
         

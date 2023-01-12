@@ -505,3 +505,36 @@ class UpdateMatchableStatus(UpdateAPIView):
           matchable_request.data,
           status.HTTP_200_OK,
         )
+
+# Accept Match
+class AcceptMatchSerializer(Serializer):
+    user_id = IntegerField()
+    partner_id = IntegerField()
+
+class UpdateMatchAcceptance(UpdateAPIView):
+    """ Updates Match to reflect match acceptance """
+    serializer_class = AcceptMatchSerializer
+
+    def update(self, request, *args, **kwargs):
+        update_request = AcceptMatchSerializer(data=request.data)
+        update_request.is_valid(raise_exception=True)
+
+        user_id = update_request.data.get('user_id')
+        partner_id = update_request.data.get('partner_id')
+
+        user1_id, user2_id = sorted([user_id, partner_id])
+        matches = Match.objects.filter(
+          user1_id=user1_id,
+          user2_id=user2_id,
+        )
+        
+        if user_id == user1_id:
+            matches.update(user1_accepted=True)
+        else:
+            matches.update(user2_accepted=True)
+
+        return Response(
+          update_request.data,
+          status.HTTP_200_OK,
+        )
+
