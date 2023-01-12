@@ -7,6 +7,7 @@ from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from math import radians, cos, sin, asin, sqrt
 from phonenumber_field.modelfields import PhoneNumberField
 from push_notifications.models import APNSDevice
 
@@ -19,6 +20,25 @@ def profile_picture_filepath(instance, filename) -> str:
 def random_code() -> str:
     """ Returns a six-digit random code """
     return "".join([str(random.randint(0, 9)) for _ in range(6)])
+
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance in kilometers between two points 
+    on the earth (specified in decimal degrees)
+    """
+    if not lon1 or not lat1 or not lon2 or not lat2: 
+        return None
+    
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles. Determines return value units.
+    return c * r
 
 class User(AbstractUser):
     """ User class extension """
@@ -94,14 +114,14 @@ class Match(models.Model):
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.initial_match_payload(self.user2),
+            data=self.initial_match_payload(self.user2, self.user1),
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.initial_match_payload(self.user1),
+            data=self.initial_match_payload(self.user1, self.user2),
             sound=self.MATCH_SOUND,
           ),
         ])
@@ -124,18 +144,32 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def initial_match_payload(self, user) -> dict:
-        return {
-            'id': user.id,
-            'first_name': user.first_name,
-            'email': user.email,
+    def initial_match_payload(self, user, partner) -> dict:
+        payload = {
+            'id': partner.id,
+            'first_name': partner.first_name,
+            'email': partner.email,
+            'time': timezone.now(),
+            'compatibility': random.randint(90, 99),
+            'distance': haversine(
+                user.longitude,
+                user.latitude,
+                partner.longitude,
+                partner.latitude),
         }
 
-    def accept_match_payload(self, user) -> dict:
+    def accept_match_payload(self, user, partner) -> dict:
         return {
-            'id': user.id,
-            'first_name': user.first_name,
-            'email': user.email,
+            'id': partner.id,
+            'first_name': partner.first_name,
+            'email': partner.email,
+            'time': timezone.now(),
+            'compatibility': random.randint(90, 99),
+            'distance': haversine(
+                user.longitude,
+                user.latitude,
+                partner.longitude,
+                partner.latitude),
         }
     
 
