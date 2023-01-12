@@ -511,7 +511,7 @@ class AcceptMatchSerializer(Serializer):
     user_id = IntegerField()
     partner_id = IntegerField()
 
-class UpdateMatchAcceptance(UpdateAPIView):
+class AcceptMatch(UpdateAPIView):
     """ Updates Match to reflect match acceptance """
     serializer_class = AcceptMatchSerializer
 

@@ -18,7 +18,7 @@ from django.urls import path
 from push_notifications.api.rest_framework import APNSDeviceViewSet
 from rest_framework import routers
 
-from users.views import DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, UserViewset, VerifyEmailCode, VerifyPhoneCode
+from users.views import AcceptMatch, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, UserViewset, VerifyEmailCode, VerifyPhoneCode
 
 router = routers.DefaultRouter()
 router.register("devices", APNSDeviceViewSet)
@@ -35,7 +35,8 @@ urlpatterns = [
     path("post-survey-answers/", PostSurveyAnswers.as_view()),
     path("update-location/", UpdateLocation.as_view()),
     path("delete-account/", DeleteAccount.as_view()),
-    path("update-matchable-status/", UpdateMatchableStatus.as_view())
+    path("update-matchable-status/", UpdateMatchableStatus.as_view()),
+    path("accept-match/", AcceptMatch.as_view()),
 ]
 
 # Devices
