@@ -132,12 +132,12 @@ class Match(models.Model):
           Notification(
             user=self.user1,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user2),
+            data=self.accept_match_payload(self.user2, self.user1),
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user1),
+            data=self.accept_match_payload(self.user1, self.user2),
           ),
         ])
 
