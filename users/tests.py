@@ -7,8 +7,8 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import EmailAuthentication, Match, Notification, PhoneAuthentication, Question, User
-from users.views import CompleteUserSerializer, DeleteAccount, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.models import EmailAuthentication, Match, Notification, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
+from users.views import CompleteUserSerializer, DeleteAccount, GetQuestions, PostSurveyAnswers, QuestionSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -346,24 +346,32 @@ class PostSurveyAnswersTest(TestCase):
         self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
 
         self.user1.save()
+
+        Question.objects.create(id=0, category=0, is_numerical=True)
+        Question.objects.create(id=1, category=1, is_numerical=True)
+        Question.objects.create(id=2, category=2, is_numerical=True)
     
-    def test_basic_survey_answers_should_create_questions(self):
+    def test_basic_numerical_survey_answers_should_create_numerical_responses(self):
         """ Post (0-2, 1-3) tuples with an existing user """
+        Question.objects.filter(id=0).update(is_numerical=True)
+        Question.objects.filter(id=1).update(is_numerical=True)
+        Question.objects.filter(id=2).update(is_numerical=True)
+
         request = APIRequestFactory().post(
           path='post-survey-answers/',
           data={
             'email': self.user1.email,
             'responses': [
               {
-                'category': 0,
+                'question_id': 0,
                 'answer': 1,
               },
               {
-                'category': 1,
+                'question_id': 1,
                 'answer': 2,
               },
               {
-                'category': 2,
+                'question_id': 2,
                 'answer': 3,
               }
             ]
@@ -373,7 +381,72 @@ class PostSurveyAnswersTest(TestCase):
         response = PostSurveyAnswers.as_view()(request)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(Question.objects.filter(user=self.user1)), 3)
+        self.assertEqual(len(NumericalResponse.objects.filter(user=self.user1)), 3)
+
+    def test_basic_text_survey_answers_should_create_text_responses(self):
+        """ Post (0-2, 1-3) tuples with an existing user """
+        Question.objects.filter(id=0).update(is_numerical=False)
+        Question.objects.filter(id=1).update(is_numerical=False)
+        Question.objects.filter(id=2).update(is_numerical=False)
+
+        request = APIRequestFactory().post(
+          path='post-survey-answers/',
+          data={
+            'email': self.user1.email,
+            'responses': [
+              {
+                'question_id': 0,
+                'answer': 'this',
+              },
+              {
+                'question_id': 1,
+                'answer': 'is',
+              },
+              {
+                'question_id': 2,
+                'answer': 'test',
+              }
+            ]
+          },
+          format='json',
+        )
+        response = PostSurveyAnswers.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(TextResponse.objects.filter(user=self.user1)), 3)
+
+    def test_basic_numerical_and_text_survey_answers_should_create_numerical_and_text_responses(self):
+        """ Post (0-2, 1-3) tuples with an existing user """
+        Question.objects.filter(id=0).update(is_numerical=False)
+        Question.objects.filter(id=1).update(is_numerical=True)
+        Question.objects.filter(id=2).update(is_numerical=True)
+
+        request = APIRequestFactory().post(
+          path='post-survey-answers/',
+          data={
+            'email': self.user1.email,
+            'responses': [
+              {
+                'question_id': 0,
+                'answer': 'this',
+              },
+              {
+                'question_id': 1,
+                'answer': 0,
+              },
+              {
+                'question_id': 2,
+                'answer': 5,
+              }
+            ]
+          },
+          format='json',
+        )
+        response = PostSurveyAnswers.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(NumericalResponse.objects.filter(user=self.user1)), 2)
+        self.assertEqual(len(TextResponse.objects.filter(user=self.user1)), 1)
 
 
 class DeleteAccountTest(TestCase):
@@ -438,4 +511,26 @@ class UpdateMatchAcceptanceTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Match.objects.get(user1_id=self.user1.id).user1_accepted)
-        
+  
+
+class GetQuestionsTest(TestCase):
+    def setUp(self):
+        self.question0 = Question.objects.create(id=0, category=0, is_numerical=True)
+        self.question1 = Question.objects.create(id=1, category=1, is_numerical=True)
+        self.question2 = Question.objects.create(id=2, category=2, is_numerical=True)
+
+    def test_basic_get_questions_returns_all_questions(self):
+        questions_json = [
+            QuestionSerializer(self.question0).data,
+            QuestionSerializer(self.question1).data,
+            QuestionSerializer(self.question2).data,
+        ]
+        request = APIRequestFactory().get(
+          path='get-questions/',
+        )
+        response = GetQuestions.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(response.data[0], questions_json[0])
+        self.assertCountEqual(response.data[1], questions_json[1])
+        self.assertCountEqual(response.data[2], questions_json[2])

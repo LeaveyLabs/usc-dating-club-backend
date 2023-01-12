@@ -7,11 +7,11 @@ from django.core.mail import send_mail
 from django.forms import ValidationError
 from django.utils import timezone
 from rest_framework import status, viewsets
-from rest_framework.generics import CreateAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer, SerializerMethodField
 from rest_framework.response import Response
 
-from users.models import EmailAuthentication, Match, PhoneAuthentication, Question, User
+from users.models import EmailAuthentication, Match, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
 
 import sys
 sys.path.append(".")
@@ -174,12 +174,22 @@ class CompleteUserSerializer(ModelSerializer):
         )
 
     def get_survey_responses(self, obj):
-        try: obj.questions
-        except: obj.questions = Question.objects.filter(user_id=self.id)
-        return [
-          SurveyResponseSerializer(question).data 
-          for question in obj.questions.all()
+        try: obj.numerical_responses
+        except: obj.numerical_responses = NumericalResponse.objects.filter(user_id=self.id)
+
+        try: obj.text_responses
+        except: obj.text_responses = TextResponse.objects.filter(user_id=self.id)
+
+        numerical_responses = [
+          SurveyResponseSerializer(question).data
+          for question in obj.numerical_responses.all()
         ]
+        text_responses = [
+          SurveyResponseSerializer(question).data
+          for question in obj.text_responses.all()
+        ]
+
+        return numerical_responses + text_responses
 
 class VerifyPhoneCodeSerializer(ModelSerializer):
     """ VerifyPhoneCode parameters """
@@ -294,8 +304,8 @@ class UserViewset(viewsets.ModelViewSet):
 
 # Post Survey Answers
 class SurveyResponseSerializer(Serializer):
-    category = CharField()
-    answer = IntegerField()
+    question_id = IntegerField()
+    answer = CharField()
 
 class PostSurveyAnswersSerializer(Serializer):
     """ PostSurveyAnswers parameters """
@@ -323,11 +333,32 @@ class PostSurveyAnswers(CreateAPIView):
         user_match = user_matches[0]
         
         for q_response in q_responses:
-            Question.objects.create(
-              category=q_response.get('category'),
-              answer=q_response.get('answer'),
-              user=user_match,
-            )
+            question_id = q_response.get('question_id')
+            answer = q_response.get('answer')
+
+            questions = Question.objects.filter(id=question_id)
+
+            if not questions.exists():
+                continue
+
+            question = questions[0]
+
+            if question.is_numerical:
+                try:
+                    answer = float(answer)
+                    NumericalResponse.objects.create(
+                      question_id=question_id,
+                      answer=answer,
+                      user=user_match,
+                    )
+                except:
+                    continue
+            else:
+                TextResponse.objects.create(
+                  question_id=question_id,
+                  answer=answer,
+                  user=user_match,
+                )
         
         return Response(survey_request.data, status.HTTP_201_CREATED)
 
@@ -538,3 +569,16 @@ class AcceptMatch(UpdateAPIView):
           status.HTTP_200_OK,
         )
 
+# Get Question List
+class QuestionSerializer(ModelSerializer):
+    class Meta:
+        model = Question
+        fields = (
+          'category',
+          'is_numerical',
+          'is_multiple_answer',
+        )
+
+class GetQuestions(ListAPIView):
+    serializer_class = QuestionSerializer
+    queryset = Question.objects.all()

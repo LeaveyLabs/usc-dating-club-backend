@@ -181,8 +181,18 @@ class Question(models.Model):
     )
 
     category = models.TextField(choices=QUESTION_CHOICES)
-    answer = models.IntegerField()
-    user = models.ForeignKey(User, related_name="questions", on_delete=models.CASCADE)
+    is_numerical = models.BooleanField(default=False)
+    is_multiple_answer = models.BooleanField(default=False)
+
+class NumericalResponse(models.Model):
+    question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="numerical_responses", on_delete=models.CASCADE)
+    answer = models.FloatField()
+
+class TextResponse(models.Model):
+    question = models.ForeignKey(Question, related_name="text_responses", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="text_responses", on_delete=models.CASCADE)
+    answer = models.TextField()
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
