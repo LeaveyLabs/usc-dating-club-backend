@@ -574,6 +574,7 @@ class QuestionSerializer(ModelSerializer):
     class Meta:
         model = Question
         fields = (
+          'id',
           'category',
           'is_numerical',
           'is_multiple_answer',
