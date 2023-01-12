@@ -149,7 +149,7 @@ class Match(models.Model):
             'id': partner.id,
             'first_name': partner.first_name,
             'email': partner.email,
-            'time': timezone.now(),
+            'time': str(timezone.now()),
             'compatibility': random.randint(90, 99),
             'distance': haversine(
                 user.longitude,
@@ -163,7 +163,7 @@ class Match(models.Model):
             'id': partner.id,
             'first_name': partner.first_name,
             'email': partner.email,
-            'time': timezone.now(),
+            'time': str(timezone.now()),
             'compatibility': random.randint(90, 99),
             'distance': haversine(
                 user.longitude,
