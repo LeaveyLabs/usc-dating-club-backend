@@ -145,7 +145,7 @@ class Match(models.Model):
         return f'{receiver_name}, you matched with {sender_name}!'
 
     def initial_match_payload(self, user, partner) -> dict:
-        payload = {
+        return {
             'id': partner.id,
             'first_name': partner.first_name,
             'email': partner.email,
