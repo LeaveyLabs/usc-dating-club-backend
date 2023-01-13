@@ -18,11 +18,16 @@ from django.urls import path
 from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
 from rest_framework import routers
 
-from users.views import AcceptMatch, DeleteAccount, GetQuestions, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, UserViewset, VerifyEmailCode, VerifyPhoneCode
+from users.views import AcceptMatch, DeleteAccount, GetQuestions, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.viewsets import UserViewset, MatchViewset, QuestionViewset, NumericalResponseViewset, TextResponseViewset
 
 router = routers.DefaultRouter()
 router.register("devices", APNSDeviceAuthorizedViewSet)
 router.register("users", UserViewset)
+router.register("matches", MatchViewset)
+router.register("questions", QuestionViewset)
+router.register("numerical-responses", NumericalResponseViewset)
+router.register("text-responses", TextResponseViewset)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
