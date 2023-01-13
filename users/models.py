@@ -237,10 +237,10 @@ class Notification(models.Model):
 
     def send_to_device(self) -> None:
         APNSDevice.objects.filter(user=self.user).send_message(
-            self.message,
+            message=self.message,
+            sound=self.sound,
             extra={
                 "type": self.type,
                 "data": self.data,
-                "sound": self.sound
             }
         )
