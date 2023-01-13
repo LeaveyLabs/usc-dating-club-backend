@@ -1,5 +1,6 @@
 """ Defines REST viewsets for all models """
 from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.serializers import SerializerMethodField, ModelSerializer
 from users.models import User, Match, Question, NumericalResponse, TextResponse
 
@@ -8,9 +9,6 @@ from users.models import User, Match, Question, NumericalResponse, TextResponse
 
 
 class ReadOnlyUserSerializer(ModelSerializer):
-    """ Read-only information about user """
-    survey_responses = SerializerMethodField()
-
     class Meta:
         """ JSON fields from User """
         model = User
@@ -22,7 +20,6 @@ class ReadOnlyUserSerializer(ModelSerializer):
           'last_name',
           'sex_identity',
           'sex_preference',
-          'survey_responses',
           'is_matchable',
         )
 
@@ -59,6 +56,7 @@ class UserViewset(viewsets.ModelViewSet):
     A viewset for viewing and editing user instances.
     """
     serializer_class = ReadOnlyUserSerializer
+    permission_class = [AllowAny, ]
     queryset = User.objects.all()
 
 class MatchViewset(viewsets.ModelViewSet):
@@ -66,6 +64,7 @@ class MatchViewset(viewsets.ModelViewSet):
     A viewset for viewing and editing match instances.
     """
     serializer_class = MatchSerializer
+    permission_class = [AllowAny, ]
     queryset = Match.objects.all()
 
 class QuestionViewset(viewsets.ModelViewSet):
@@ -73,6 +72,7 @@ class QuestionViewset(viewsets.ModelViewSet):
     A viewset for viewing and editing question instances.
     """
     serializer_class = QuestionSerializer
+    permission_class = [AllowAny, ]
     queryset = Question.objects.all()
 
 class NumericalResponseViewset(viewsets.ModelViewSet):
@@ -80,6 +80,7 @@ class NumericalResponseViewset(viewsets.ModelViewSet):
     A viewset for viewing and editing numerical response instances.
     """
     serializer_class = NumericalResponseSerializer
+    permission_class = [AllowAny, ]
     queryset = NumericalResponse.objects.all()
 
 class TextResponseViewset(viewsets.ModelViewSet):
@@ -87,4 +88,5 @@ class TextResponseViewset(viewsets.ModelViewSet):
     A viewset for viewing and editing text response instances.
     """
     serializer_class = TextResponseSerializer
+    permission_class = [AllowAny, ]
     queryset = TextResponse.objects.all()

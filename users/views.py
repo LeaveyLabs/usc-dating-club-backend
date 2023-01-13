@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer, SerializerMethodField
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
@@ -42,6 +43,7 @@ class SendEmailCodeSerializer(ModelSerializer):
 class SendEmailCode(CreateAPIView):
     """ Send email with verification code """
     serializer_class = SendEmailCodeSerializer
+    permission_class = [AllowAny, ]
 
     def create(self, request, *args, **kwargs):
         email_request = SendEmailCodeSerializer(data=request.data)
@@ -95,6 +97,7 @@ class VerifyEmailCodeSerializer(ModelSerializer):
 class VerifyEmailCode(UpdateAPIView):
     """ Verify email with provided code """
     serializer_class = VerifyEmailCodeSerializer
+    permission_class = [AllowAny, ]
 
     def update(self, request, *args, **kwargs):
         code_request = VerifyEmailCodeSerializer(data=request.data)
@@ -135,6 +138,7 @@ class SendPhoneCodeSerializer(ModelSerializer):
 class SendPhoneCode(CreateAPIView):
     """ Sends verification code to phone """
     serializer_class = SendPhoneCodeSerializer
+    permission_class = [AllowAny, ]
     
     def create(self, request, *args, **kwargs):
         phone_request = SendPhoneCodeSerializer(data=request.data)
@@ -224,6 +228,7 @@ class VerifyPhoneCodeSerializer(ModelSerializer):
 class VerifyPhoneCode(UpdateAPIView):
     """ Verifies phone number with code """
     serializer_class = VerifyPhoneCodeSerializer
+    permission_class = [AllowAny, ]
 
     def update(self, request, *args, **kwargs):
         code_request = VerifyPhoneCodeSerializer(data=request.data)
@@ -276,6 +281,7 @@ class RegisterUserSerializer(ModelSerializer):
 class RegisterUser(CreateAPIView):
     """ Registers user """
     serializer_class = RegisterUserSerializer
+    permission_class = [AllowAny, ]
 
     def create(self, request, *args, **kwargs):
         register_request = RegisterUserSerializer(data=request.data)
@@ -345,6 +351,7 @@ class PostSurveyAnswersSerializer(Serializer):
 class PostSurveyAnswers(CreateAPIView):
     """ Post survey answers """
     serializer_class = PostSurveyAnswersSerializer
+    permission_class = [AllowAny, ]
 
     def create(self, request, *args, **kwargs):
         survey_request = PostSurveyAnswersSerializer(data=request.data)
@@ -422,6 +429,7 @@ class UpdateLocationSerializer(ModelSerializer):
 class UpdateLocation(UpdateAPIView):
     """ List nearby users to a location """
     serializer_class = UpdateLocationSerializer
+    permission_class = [AllowAny, ]
 
     def update(self, request, *args, **kwargs):
         location_request = UpdateLocationSerializer(data=request.data)
@@ -524,6 +532,7 @@ class DeleteAccountSerializer(Serializer):
 class DeleteAccount(DestroyAPIView):
     """ Deletes account """
     serializer_class = DeleteAccountSerializer
+    permission_class = [AllowAny, ]
     
     def destroy(self, request, *args, **kwargs):
         delete_request = DeleteAccountSerializer(data=request.data)
@@ -542,6 +551,7 @@ class UpdateMatchableStatusSerializer(Serializer):
 class UpdateMatchableStatus(UpdateAPIView):
     """ Update whether the user is matchable """
     serializer_class = UpdateMatchableStatusSerializer
+    permission_class = [AllowAny, ]
 
     def update(self, request, *args, **kwargs):
         matchable_request = UpdateMatchableStatusSerializer(data=request.data)
@@ -575,6 +585,7 @@ class AcceptMatchSerializer(Serializer):
 class AcceptMatch(UpdateAPIView):
     """ Updates Match to reflect match acceptance """
     serializer_class = AcceptMatchSerializer
+    permission_class = [AllowAny, ]
 
     def update(self, request, *args, **kwargs):
         update_request = AcceptMatchSerializer(data=request.data)
@@ -612,4 +623,5 @@ class QuestionSerializer(ModelSerializer):
 
 class GetQuestions(ListAPIView):
     serializer_class = QuestionSerializer
+    permission_class = [AllowAny, ]
     queryset = Question.objects.all()
