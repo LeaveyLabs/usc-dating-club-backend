@@ -332,13 +332,6 @@ class ReadOnlyUserSerializer(ModelSerializer):
           'is_matchable',
         )
 
-class UserViewset(viewsets.ModelViewSet):
-    """
-    A viewset for viewing and editing user instances.
-    """
-    serializer_class = ReadOnlyUserSerializer
-    queryset = User.objects.all()
-
 # Post Survey Answers
 class SurveyResponseSerializer(Serializer):
     question_id = IntegerField()
