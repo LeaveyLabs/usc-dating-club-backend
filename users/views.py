@@ -207,7 +207,7 @@ class CompleteUserSerializer(ModelSerializer):
     def get_token(self, obj):
         try: obj.token
         except: obj.token = Token.objects.get(user_id=obj.id)
-        return obj.token
+        return obj.token.key
 
 class VerifyPhoneCodeSerializer(ModelSerializer):
     """ VerifyPhoneCode parameters """
