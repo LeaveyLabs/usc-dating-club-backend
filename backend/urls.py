@@ -15,13 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from push_notifications.api.rest_framework import APNSDeviceViewSet
+from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
 from rest_framework import routers
 
 from users.views import AcceptMatch, DeleteAccount, GetQuestions, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, UserViewset, VerifyEmailCode, VerifyPhoneCode
 
 router = routers.DefaultRouter()
-router.register("devices", APNSDeviceViewSet)
+router.register("devices", APNSDeviceAuthorizedViewSet)
 router.register("users", UserViewset)
 
 urlpatterns = [
