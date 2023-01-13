@@ -10,6 +10,7 @@ from django.utils import timezone
 from math import radians, cos, sin, asin, sqrt
 from phonenumber_field.modelfields import PhoneNumberField
 from push_notifications.models import APNSDevice
+from rest_framework.authtoken.models import Token
 
 def profile_picture_filepath(instance, filename) -> str:
     """ Returns save location of profile picture """
@@ -70,7 +71,10 @@ class User(AbstractUser):
         self.password = self.password if self.password else uuid4()
         self.first_name = self.first_name.lower()
         self.last_name = self.last_name.lower()
-        return super().save(*args, **kwargs)
+        user = super().save(*args, **kwargs)
+        if not Token.objects.filter(user_id=self.id).exists():
+            Token.objects.create(user_id=self.id)
+        return user
 
 class Match(models.Model):
     """ Match between two users """

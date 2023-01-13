@@ -10,6 +10,7 @@ from rest_framework import status, viewsets
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.serializers import BooleanField, EmailField, IntegerField, ListField, CharField, ModelSerializer, Serializer, SerializerMethodField
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 from users.models import EmailAuthentication, Match, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
 
@@ -167,6 +168,7 @@ class SendPhoneCode(CreateAPIView):
 class CompleteUserSerializer(ModelSerializer):
     """ Complete information about user """
     survey_responses = SerializerMethodField()
+    token = SerializerMethodField()
 
     class Meta:
         """ JSON fields from User """
@@ -181,6 +183,7 @@ class CompleteUserSerializer(ModelSerializer):
           'sex_preference',
           'survey_responses',
           'is_matchable',
+          'token',
         )
 
     def get_survey_responses(self, obj):
@@ -200,6 +203,11 @@ class CompleteUserSerializer(ModelSerializer):
         ]
 
         return numerical_responses + text_responses
+
+    def get_token(self, obj):
+        try: obj.token
+        except: obj.token = Token.objects.get(user_id=obj.id)
+        return obj.token
 
 class VerifyPhoneCodeSerializer(ModelSerializer):
     """ VerifyPhoneCode parameters """
@@ -305,11 +313,30 @@ class RegisterUser(CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 # Update User
+class ReadOnlyUserSerializer(ModelSerializer):
+    """ Read-only information about user """
+    survey_responses = SerializerMethodField()
+
+    class Meta:
+        """ JSON fields from User """
+        model = User
+        fields = (
+          'id',
+          'email',
+          'phone_number',
+          'first_name',
+          'last_name',
+          'sex_identity',
+          'sex_preference',
+          'survey_responses',
+          'is_matchable',
+        )
+
 class UserViewset(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing user instances.
     """
-    serializer_class = CompleteUserSerializer
+    serializer_class = ReadOnlyUserSerializer
     queryset = User.objects.all()
 
 # Post Survey Answers

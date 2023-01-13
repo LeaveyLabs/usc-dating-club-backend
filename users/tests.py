@@ -14,6 +14,21 @@ import sys
 sys.path.append(".")
 from twilio_config import TwilioTestClientMessages
 
+class APIRequestFactoryWithToken(APIRequestFactory):
+    token = None
+
+    def get(self, *args, **kwargs):
+        return super().get(HTTP_AUTHORIZATION=f'Token {self.token}', *args, **kwargs)
+
+    def put(self, *args, **kwargs):
+        return super().put(HTTP_AUTHORIZATION=f'Token {self.token}', *args, **kwargs)
+    
+    def patch(self, *args, **kwargs):
+        return super().patch(HTTP_AUTHORIZATION=f'Token {self.token}', *args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        return super().delete(HTTP_AUTHORIZATION=f'Token {self.token}', *args, **kwargs)
+
 
 class SendEmailCodeTest(TestCase):
     """ Test email sender API """

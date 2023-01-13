@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "push_notifications",
     "rest_framework",
-    # "rest_framework.authtoken",
+    "rest_framework.authtoken",
     "users",
 ]
 
