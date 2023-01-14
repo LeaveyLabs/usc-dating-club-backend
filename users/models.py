@@ -6,6 +6,7 @@ from uuid import uuid4
 from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 from math import radians, cos, sin, asin, sqrt
 from phonenumber_field.modelfields import PhoneNumberField
@@ -187,6 +188,7 @@ class Question(models.Model):
     category = models.TextField(choices=QUESTION_CHOICES)
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
+    text_answer_choices = ArrayField(models.TextField(), default=list)
 
 class NumericalResponse(models.Model):
     question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
