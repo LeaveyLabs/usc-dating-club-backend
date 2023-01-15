@@ -614,12 +614,7 @@ class AcceptMatch(UpdateAPIView):
 class QuestionSerializer(ModelSerializer):
     class Meta:
         model = Question
-        fields = (
-          'id',
-          'category',
-          'is_numerical',
-          'is_multiple_answer',
-        )
+        fields = '__all__'
 
 class GetQuestions(ListAPIView):
     serializer_class = QuestionSerializer
