@@ -181,11 +181,12 @@ class Match(models.Model):
 class Question(models.Model):
     """ Compatibility questions for matching users """
 
-    QUESTION_CHOICES = (
+    CATEGORY_CHOICES = (
       (0,  'What time do you sleep at night?'),
     )
 
-    category = models.TextField(choices=QUESTION_CHOICES)
+    category = models.TextField(choices=CATEGORY_CHOICES)
+    prompt = models.TextField()
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
     text_answer_choices = ArrayField(models.TextField(), default=list)
