@@ -625,3 +625,11 @@ class GetQuestions(ListAPIView):
     serializer_class = QuestionSerializer
     permission_class = [AllowAny, ]
     queryset = Question.objects.all()
+
+
+class GetPageOrder(ListAPIView):
+    def list(self, request, *args, **kwargs):
+        return Response(
+          ["personality", "preferences", "values", "lifestyle",],
+          status.HTTP_200_OK,
+        )
