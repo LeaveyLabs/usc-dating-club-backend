@@ -181,8 +181,27 @@ class Match(models.Model):
 class Question(models.Model):
     """ Compatibility questions for matching users """
 
+    """ Measurement criteria """
     CATEGORY_CHOICES = (
-      (0,  'What time do you sleep at night?'),
+      (0,  'organized/chaotic'),
+      (1,  'extraverted/introverted'),
+      (2,  'sentimental/stoic'),
+      (3,  'empathetic/intellectual'),
+      (4,  'bold/patient'),
+      (5,  'spontaneous/intentional'),
+      (6,  'timely/flexible'),
+      (7,  'agreeable/strong-willed'),
+      (8,  'family-oriented/career-oriented'),
+      (9,  'frugal/bougie'),
+      (10,  'dog-lover/cat-lover'),
+      (11,  'academic/artistic'),
+      (12,  'minimalistic/materialistic'),
+      (13,  'self-aware/blissfully-unaware'),
+      (14,  'prudent/yolo'),
+      (15,  'laid-back/straightedge'),
+      (16,  'attentive/idgaf'),
+      (17,  'early-bird/night-owl'),
+      (18,  'open-minded/disciplined'),
     )
 
     category = models.TextField(choices=CATEGORY_CHOICES)
