@@ -628,6 +628,7 @@ class GetQuestions(ListAPIView):
 
 
 class GetPageOrder(ListAPIView):
+    queryset = Question.objects.all()
     def list(self, request, *args, **kwargs):
         return Response(
           ["personality", "preferences", "values", "lifestyle",],
