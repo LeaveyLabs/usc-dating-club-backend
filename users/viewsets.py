@@ -1,8 +1,8 @@
 """ Defines REST viewsets for all models """
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from rest_framework.serializers import SerializerMethodField, ModelSerializer
-from users.models import User, Match, Question, NumericalResponse, TextResponse
+from rest_framework.serializers import ModelSerializer
+from users.models import User, Match, Question, NumericalResponse, TextResponse, WaitingEmail, BannedEmail
 
 
 """ Serializers """
@@ -27,6 +27,21 @@ class MatchSerializer(ModelSerializer):
     class Meta:
         """ JSON fields from Match """
         model = Match
+        fields = (
+            'user1_id',
+            'user2_id',
+        )
+
+class WaitingEmailSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from WaitingEmail """
+        model = WaitingEmail
+        fields = '__all__'
+
+class BannedEmailSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from BannedEmail """
+        model = BannedEmail
         fields = '__all__'
 
 class QuestionSerializer(ModelSerializer):
@@ -58,6 +73,22 @@ class UserViewset(viewsets.ModelViewSet):
     serializer_class = ReadOnlyUserSerializer
     permission_class = [AllowAny, ]
     queryset = User.objects.all()
+
+class WaitingEmailViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing waiting emails.
+    """
+    serializer_class = WaitingEmailSerializer
+    permission_class = [AllowAny, ]
+    queryset = WaitingEmail.objects.all()
+
+class BannedEmailViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing banned emails.
+    """
+    serializer_class = BannedEmailSerializer
+    permission_class = [AllowAny, ]
+    queryset = BannedEmail.objects.all()
 
 class MatchViewset(viewsets.ModelViewSet):
     """

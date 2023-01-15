@@ -214,6 +214,14 @@ class PhoneAuthentication(models.Model):
     is_verified = models.BooleanField(default=False)
     proxy_uuid = models.UUIDField()
 
+class WaitingEmail(models.Model):
+    """ Email on waiting list """
+    email = models.EmailField()
+
+class BannedEmail(models.Model):
+    """ Email on banned list """
+    email = models.EmailField()
+
 class NotificationManager(models.Manager):
     def bulk_create(self, objs, batch_size=None, ignore_conflicts=False):
         notifications = super().bulk_create(objs, batch_size, ignore_conflicts)
