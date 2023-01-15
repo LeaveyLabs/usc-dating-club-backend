@@ -225,7 +225,7 @@ class Question(models.Model):
     prompt = models.TextField()
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
-    text_answer_choices = ArrayField(models.TextField(), default=list)
+    text_answer_choices = ArrayField(models.TextField(), default=list, blank=True)
 
 class NumericalResponse(models.Model):
     question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
