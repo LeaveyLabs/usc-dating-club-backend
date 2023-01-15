@@ -181,6 +181,14 @@ class Match(models.Model):
 class Question(models.Model):
     """ Compatibility questions for matching users """
 
+    """ Headers to display the questions """
+    HEADER_CHOICES = (
+        (0, "personality"),
+        (1, "preferences"),
+        (2, "values"),
+        (3, "lifestyle"),
+    )
+
     """ Measurement criteria """
     CATEGORY_CHOICES = (
       # Single answer
@@ -212,6 +220,7 @@ class Question(models.Model):
       (24, 'drugs'),
     )
 
+    header = models.TextField(choices=HEADER_CHOICES)
     category = models.TextField(choices=CATEGORY_CHOICES)
     prompt = models.TextField()
     is_numerical = models.BooleanField(default=False)
