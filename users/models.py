@@ -161,6 +161,8 @@ class Match(models.Model):
                 user.latitude,
                 partner.longitude,
                 partner.latitude),
+            'latitude': partner.latitude,
+            'longitude': partner.longitude,
         }
 
     def accept_match_payload(self, user, partner) -> dict:
@@ -175,6 +177,8 @@ class Match(models.Model):
                 user.latitude,
                 partner.longitude,
                 partner.latitude),
+            'latitude': partner.latitude,
+            'longitude': partner.longitude,
         }
     
 
