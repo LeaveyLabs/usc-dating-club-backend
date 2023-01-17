@@ -1,7 +1,7 @@
 """ Defines API for Users """
 import os
 
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db.utils import IntegrityError
 from django.core.mail import send_mail
 from django.forms import ValidationError
@@ -192,10 +192,10 @@ class CompleteUserSerializer(ModelSerializer):
 
     def get_survey_responses(self, obj):
         try: obj.numerical_responses
-        except: obj.numerical_responses = NumericalResponse.objects.filter(user_id=self.id)
+        except: obj.numerical_responses = NumericalResponse.objects.filter(user_id=obj.id)
 
         try: obj.text_responses
-        except: obj.text_responses = TextResponse.objects.filter(user_id=self.id)
+        except: obj.text_responses = TextResponse.objects.filter(user_id=obj.id)
 
         numerical_responses = [
           SurveyResponseSerializer(question).data
@@ -315,8 +315,12 @@ class RegisterUser(CreateAPIView):
               },
               status.HTTP_400_BAD_REQUEST
             )
-        
-        return super().create(request, *args, **kwargs)
+
+        registered_user = User(**register_request.data).save()
+        return Response(
+          CompleteUserSerializer(registered_user).data,
+          status.HTTP_201_CREATED,
+        )
 
 # Update User
 class ReadOnlyUserSerializer(ModelSerializer):
@@ -439,7 +443,8 @@ class UpdateLocation(UpdateAPIView):
         latitude = location_request.data.get('latitude')
         longitude = location_request.data.get('longitude')
 
-        updated_users = User.objects.filter(email=email)
+        updated_users = User.objects.filter(email=email)\
+          .prefetch_related('numerical_responses', 'text_responses')
         updated_users.update(
           latitude=latitude,
           longitude=longitude,
@@ -463,6 +468,57 @@ class UpdateLocation(UpdateAPIView):
           location_request.data,
           status.HTTP_200_OK,
         )
+      
+    def filter_compatible_users(self, user, nearby_users):
+        # has to have three numerical categories that they're close together in
+        # has to have three text categories that they're close together in
+        # same question_id
+        # response is the same
+        # get all responses for the users
+            # numerical_responses__question_id=
+        try: user.numerical_responses
+        except: user.numerical_responses = NumericalResponse.objects.filter(user=user)
+
+        try: user.text_responses
+        except: user.text_responses = TextResponse.objects.filter(user=user)
+
+        compatible_numerical_responses = Q()
+        compatible_text_responses = Q()
+
+        for response in user.numerical_responses.all():
+            compatible_numerical_responses |= (
+              Q(numerical_responses__question_id=response.question_id)&
+              Q(numerical_responses__answer=response.answer)           
+            )
+        for response in user.text_responses.all():
+            compatible_text_responses |= (
+              Q(text_responses__question_id=response.question_id)&
+              Q(text_responses__answer=response.answer)        
+            )
+
+        compatible_numerical_count = Count(
+          'numerical_responses', 
+          filter=compatible_numerical_responses
+        )
+        compatible_text_count = Count(
+          'text_responses', 
+          filter=compatible_text_responses
+        )
+
+        return nearby_users.annotate(
+          compatible_numerical_count=compatible_numerical_count,
+          compatible_text_count=compatible_text_count,
+        ).filter(
+          compatible_numerical_count__gte=1,
+          compatible_text_count__gte=1,
+        )
+
+        # return Q(
+        #   numerical_responses__question_id=user.numerical_responses__question_id,
+        #   numerical_responses__answer=user.numerical_responses_answer,
+        #   text_responses__question_id=user.text_responses__question_id,
+        #   text_responses__answer=user.text_responses__answer,
+        # )
 
     def match_with_nearby_users(self, user, latitude, longitude) -> None:
         """ 
@@ -513,14 +569,18 @@ class UpdateLocation(UpdateAPIView):
           recent_update&
           is_matchable
         )
+        compatible_users = self.filter_compatible_users(
+          user=user, 
+          nearby_users=nearby_users
+        )
 
-        if not nearby_users: return
-
-        nearby_user = nearby_users[0]
+        if not compatible_users.exists(): return
+        
+        compatible_user = compatible_users[0]
 
         Match.objects.create(
           user1=user,
-          user2=nearby_user,
+          user2=compatible_user,
         )
 
 

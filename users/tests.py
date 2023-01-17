@@ -277,10 +277,23 @@ class UpdateLocationTest(TestCase):
         self.user2.save()
       
     def test_basic_location_update_near_compatible_user_matches_user(self):
-        """" Both people are in the same location """
+        """" 
+        Both people are:
+        - in the same location
+        - opposite sex preferences
+        - similar compatibility.
+        """
         self.user1.latitude = 0
         self.user1.longitude = 0
         self.user1.save()
+
+        Question.objects.create(id=1, category='test1', is_numerical=True)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
+
+        Question.objects.create(id=2, category='test2', is_numerical=False)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
 
         request = APIRequestFactory().put(
           path='update-location/',
@@ -300,7 +313,7 @@ class UpdateLocationTest(TestCase):
         self.assertTrue(Notification.objects.filter(user=self.user1))
         self.assertTrue(Notification.objects.filter(user=self.user2))
 
-    def test_basic_location_update_near_incompatible_user_does_not_match_user(self):
+    def test_basic_location_update_near_sexually_incompatible_user_does_not_match_user(self):
         """ Both people are in the same location, but nonmatching sexual preference """
         self.user1.latitude = 0
         self.user1.longitude = 0
@@ -330,6 +343,41 @@ class UpdateLocationTest(TestCase):
         )
         self.assertFalse(Notification.objects.filter(user=self.user1))
         self.assertFalse(Notification.objects.filter(user=self.user2))
+
+    def test_basic_location_update_near_test_incompatible_user_matches_user(self):
+        """" 
+        Very different test results.
+        """
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        Question.objects.create(id=1, category='test1', is_numerical=True)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=7, user=self.user2)
+
+        Question.objects.create(id=2, category='test2', is_numerical=False)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='goodbye', user=self.user2)
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0,
+            'longitude': 0,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertFalse(Notification.objects.filter(user=self.user1))
+        self.assertFalse(Notification.objects.filter(user=self.user2))
+
 
     def test_old_location_update_does_not_match_user(self) -> None:
         """ Try to match with a user who updated their location yesterday """
