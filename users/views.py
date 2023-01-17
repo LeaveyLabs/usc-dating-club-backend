@@ -451,7 +451,7 @@ class UpdateLocation(UpdateAPIView):
           loc_update_time=timezone.now()
         )
 
-        if not updated_users:
+        if not updated_users.exists():
             return Response(
               {
                 'email': ['email not found'],
@@ -481,6 +481,8 @@ class UpdateLocation(UpdateAPIView):
         compatible_numerical_responses = Q()
         compatible_text_responses = Q()
 
+        # average score + standard deviation
+        
         for response in user.numerical_responses.all():
             compatible_numerical_responses |= (
               Q(numerical_responses__question_id=response.question_id)&

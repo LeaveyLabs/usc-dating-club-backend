@@ -237,6 +237,8 @@ class Question(models.Model):
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
     text_answer_choices = ArrayField(models.TextField(), default=list, blank=True)
+    std_dev = models.FloatField(null=True, blank=True)
+    avg = models.FloatField(null=True, blank=True)
 
 class NumericalResponse(models.Model):
     question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
