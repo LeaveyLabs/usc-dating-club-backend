@@ -186,46 +186,53 @@ class Question(models.Model):
     """ Compatibility questions for matching users """
 
     """ Headers to display the questions """
-    HEADER_CHOICES = (
-        ("personality", "personality"),
-        ("preferences", "preferences"),
-        ("values", "values"),
-        ("lifestyle", "lifestyle"),
+    HEADER_OPTIONS = (
+        "personality",
+        "preferences",
+        "values",
+        "lifestyle",
     )
 
     """ Measurement criteria """
-    CATEGORY_CHOICES = (
+    CATEGORY_OPTIONS = (
       # Single answer
-      ('organized/chaotic', 'organized/chaotic'),
-      ('extraverted/introverted', 'extraverted/introverted'),
-      ('extraverted/introverted', 'sentimental/stoic'),
-      ('empathetic/intellectual', 'empathetic/intellectual'),
-      ('bold/patient', 'bold/patient'),
-      ('spontaneous/intentional', 'spontaneous/intentional'),
-      ('timely/flexible', 'timely/flexible'),
-      ('agreeable/strong-willed', 'agreeable/strong-willed'),
-      ('family-oriented/career-oriented', 'family-oriented/career-oriented'),
-      ('frugal/bougie', 'frugal/bougie'),
-      ('dog-lover/cat-lover', 'dog-lover/cat-lover'),
-      ('academic/artistic', 'academic/artistic'),
-      ('minimalistic/materialistic', 'minimalistic/materialistic'),
-      ('self-aware/blissfully-unaware', 'self-aware/blissfully-unaware'),
-      ('prudent/yolo', 'prudent/yolo'),
-      ('laid-back/straightedge', 'laid-back/straightedge'),
-      ('attentive/idgaf', 'attentive/idgaf'),
-      ('early-bird/night-owl', 'early-bird/night-owl'),
-      ('open-minded/disciplined', 'open-minded/disciplined'),
+      'organized/chaotic',
+      'extraverted/introverted',
+      'sentimental/stoic',
+      'empathetic/intellectual',
+      'bold/patient',
+      'spontaneous/intentional',
+      'timely/flexible',
+      'agreeable/strong-willed',
+      'family-oriented/career-oriented',
+      'frugal/bougie',
+      'dog-lover/cat-lover',
+      'academic/artistic',
+      'minimalistic/materialistic',
+      'self-aware/blissfully-unaware',
+      'prudent/yolo',
+      'laid-back/straightedge',
+      'attentive/idgaf',
+      'early-bird/night-owl',
+      'open-minded/disciplined',
       # Multiple answer
-      ('languages', 'languages'),
-      ('love-languages', 'love-languages'),
-      ('politics', 'politics'),
-      ('religion', 'religion'),
-      ('diet', 'diet'),
-      ('drugs', 'drugs'),
+      'languages',
+      'love-languages',
+      'politics',
+      'religion',
+      'diet',
+      'drugs',
     )
 
-    header = models.TextField(choices=HEADER_CHOICES)
-    category = models.TextField(choices=CATEGORY_CHOICES)
+    HEADER_TUPLES = (
+        (header, header) for header in HEADER_OPTIONS
+    )
+    CATEGORY_TUPLES = (
+        (category, category) for category in CATEGORY_OPTIONS
+    )
+
+    header = models.TextField(choices=HEADER_TUPLES)
+    category = models.TextField(choices=CATEGORY_TUPLES)
     prompt = models.TextField()
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
