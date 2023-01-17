@@ -469,13 +469,9 @@ class UpdateLocation(UpdateAPIView):
           status.HTTP_200_OK,
         )
       
-    def filter_compatible_users(self, user, nearby_users):
-        # has to have three numerical categories that they're close together in
-        # has to have three text categories that they're close together in
-        # same question_id
-        # response is the same
-        # get all responses for the users
-            # numerical_responses__question_id=
+    def filter_compatible_users(self, user, nearby_users, 
+        minimum_shared_numerical=1, minimum_shared_text=1):
+
         try: user.numerical_responses
         except: user.numerical_responses = NumericalResponse.objects.filter(user=user)
 
@@ -488,7 +484,8 @@ class UpdateLocation(UpdateAPIView):
         for response in user.numerical_responses.all():
             compatible_numerical_responses |= (
               Q(numerical_responses__question_id=response.question_id)&
-              Q(numerical_responses__answer=response.answer)           
+              Q(numerical_responses__answer__lte=response.answer*1.25)&
+              Q(numerical_responses__answer__gte=response.answer*.75)           
             )
         for response in user.text_responses.all():
             compatible_text_responses |= (
@@ -509,16 +506,9 @@ class UpdateLocation(UpdateAPIView):
           compatible_numerical_count=compatible_numerical_count,
           compatible_text_count=compatible_text_count,
         ).filter(
-          compatible_numerical_count__gte=1,
-          compatible_text_count__gte=1,
+          compatible_numerical_count__gte=minimum_shared_numerical,
+          compatible_text_count__gte=minimum_shared_text,
         )
-
-        # return Q(
-        #   numerical_responses__question_id=user.numerical_responses__question_id,
-        #   numerical_responses__answer=user.numerical_responses_answer,
-        #   text_responses__question_id=user.text_responses__question_id,
-        #   text_responses__answer=user.text_responses__answer,
-        # )
 
     def match_with_nearby_users(self, user, latitude, longitude) -> None:
         """ 
