@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
-from users.models import EmailAuthentication, Match, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
+from users.models import EmailAuthentication, Match, NumericalResponse, PhoneAuthentication, Question, TextResponse, User, WaitingEmail
 
 import sys
 sys.path.append(".")
@@ -33,12 +33,12 @@ class SendEmailCodeSerializer(ModelSerializer):
           'proxy_uuid',
         )
 
-    def validate_email(self, email):
-        """ Emails should be from USC only """
-        domain = email.split('@')[-1]
-        if domain not in ['usc.edu']:
-            raise ValidationError('non usc email')
-        return email
+    # def validate_email(self, email):
+    #     """ Emails should be from USC only """
+    #     domain = email.split('@')[-1]
+    #     if domain not in ['usc.edu']:
+    #         raise ValidationError('non usc email')
+    #     return email
 
 class SendEmailCode(CreateAPIView):
     """ Send email with verification code """
@@ -50,6 +50,15 @@ class SendEmailCode(CreateAPIView):
         email_request.is_valid(raise_exception=True)
         email = email_request.data.get('email').lower()
         proxy_uuid = email_request.data.get('proxy_uuid')
+
+        if not self.is_usc_email(email):
+          WaitingEmail.objects.create(email=email)
+          return Response(
+            {
+              'email': ['email added to waiting list']
+            },
+            status.HTTP_400_BAD_REQUEST,
+          )
 
         user_matches = User.objects.filter(email=email)
         if user_matches.exists():
@@ -80,6 +89,11 @@ class SendEmailCode(CreateAPIView):
             [email],
             fail_silently=False,
         )
+
+    def is_usc_email(self, email) -> bool:
+        """ Emails should be from USC only """
+        domain = email.split('@')[-1]
+        return domain in ['usc.edu']
 
 # Verify Email Code
 class VerifyEmailCodeSerializer(ModelSerializer):
