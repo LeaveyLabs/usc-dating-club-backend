@@ -711,6 +711,7 @@ class ForceCreateMatch(CreateAPIView):
         user2_id = match_request.data.get('user2_id')
 
         Match.objects.filter(user1_id=user1_id, user2_id=user2_id).delete()
+        Match.objects.filter(user1_id=user2_id, user2_id=user1_id).delete()
         Match.objects.create(user1_id=user1_id, user2_id=user2_id)
 
         return Response(
