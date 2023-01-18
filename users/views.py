@@ -2,7 +2,6 @@
 import os
 
 from django.db.models import Q, Count
-from django.db.utils import IntegrityError
 from django.core.mail import send_mail
 from django.forms import ValidationError
 from django.utils import timezone
@@ -447,6 +446,7 @@ class UpdateLocationSerializer(ModelSerializer):
 
 class UpdateLocation(UpdateAPIView):
     """ List nearby users to a location """
+    throttle_class = 'location'
     serializer_class = UpdateLocationSerializer
     permission_class = [AllowAny, ]
 
