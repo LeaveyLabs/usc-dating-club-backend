@@ -101,8 +101,8 @@ class MatchViewset(viewsets.ModelViewSet):
 
         if request.user.is_superuser:
             Match.objects.filter(
-                user1=match_request.data.get('user1'),
-                user2=match_request.data.get('user2'),
+                user1_id=match_request.data.get('user1'),
+                user2_id=match_request.data.get('user2'),
             ).delete()
 
         return super().create(request, *args, **kwargs)
