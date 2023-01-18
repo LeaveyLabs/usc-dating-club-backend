@@ -99,10 +99,10 @@ class MatchViewset(viewsets.ModelViewSet):
         match_request = MatchSerializer(data=request.data)
         match_request.is_valid()
 
-        Match.objects.filter(
-            user1=match_request.data.get('user1'),
-            user2=match_request.data.get('user2'),
-        ).delete()
+        user1 = match_request.data.get('user1')
+        user2 = match_request.data.get('user2')
+
+        Match.objects.filter(user1=user1,user2=user2).delete()
 
         return super().create(request, *args, **kwargs)
 
