@@ -202,6 +202,7 @@ class CompleteUserSerializer(ModelSerializer):
           'survey_responses',
           'is_matchable',
           'token',
+          'is_superuser',
         )
 
     def get_survey_responses(self, obj):
