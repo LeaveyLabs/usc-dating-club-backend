@@ -95,6 +95,18 @@ class MatchViewset(viewsets.ModelViewSet):
     permission_class = [AllowAny, ]
     queryset = Match.objects.all()
 
+    def create(self, request, *args, **kwargs):
+        match_request = MatchSerializer(data=request.data)
+        match_request.is_valid()
+
+        if request.user.is_superuser:
+            Match.objects.filter(
+                user1=match_request.data.get('user1'),
+                user2=match_request.data.get('user2'),
+            ).delete()
+
+        return super().create(request, *args, **kwargs)
+
 class QuestionViewset(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing question instances.
