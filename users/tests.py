@@ -223,20 +223,23 @@ class RegisterUserTest(TestCase):
 
     def test_basic_user_info_registers_user(self):
         """ Register Kevin Sun (kevinsun@usc.edu) """
+        registration_data = {
+          'email': self.basic_email,
+          'phone_number': self.basic_phone_number,
+          'first_name': self.basic_first_name,
+          'last_name': self.basic_last_name,
+          'sex_identity': self.basic_sex_identity,
+          'sex_preference': self.basic_sex_preference,
+        }
+
         request = APIRequestFactory().post(
           path='register-user/',
-          data={
-            'email': self.basic_email,
-            'phone_number': self.basic_phone_number,
-            'first_name': self.basic_first_name,
-            'last_name': self.basic_last_name,
-            'sex_identity': self.basic_sex_identity,
-            'sex_preference': self.basic_sex_preference,
-          }
+          data=registration_data,
         )
         response = RegisterUser.as_view()(request)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('token', response.data)
         self.assertTrue(User.objects.filter(
           email=self.basic_email,
           phone_number=self.basic_phone_number,

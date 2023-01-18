@@ -330,7 +330,7 @@ class RegisterUser(CreateAPIView):
               status.HTTP_400_BAD_REQUEST
             )
 
-        registered_user = User(**register_request.data).save()
+        registered_user = User.objects.create(**register_request.data)
         return Response(
           CompleteUserSerializer(registered_user).data,
           status.HTTP_201_CREATED,
