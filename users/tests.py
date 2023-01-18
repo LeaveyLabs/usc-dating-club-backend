@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, Match, Notification, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
-from users.views import CompleteUserSerializer, DeleteAccount, GetQuestions, PostSurveyAnswers, QuestionSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, GetQuestions, PostSurveyAnswers, QuestionSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -600,3 +600,32 @@ class GetQuestionsTest(TestCase):
         self.assertCountEqual(response.data[0], questions_json[0])
         self.assertCountEqual(response.data[1], questions_json[1])
         self.assertCountEqual(response.data[2], questions_json[2])
+
+class ForceCreateMatchTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1)
+        self.user2 = random_user(2)
+
+        self.user1.save()
+        self.user2.save()
+
+    def test_basic_force_create_overrides_existing_match(self):
+        Match.objects.create(
+          user1_id=self.user1.id,
+          user2_id=self.user2.id
+        )
+
+        request = APIRequestFactory().post(
+          path='force-create-match/',
+          data={
+            'user1_id': self.user1.id,
+            'user2_id': self.user2.id,
+          },
+        )
+        response = ForceCreateMatch.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Match.objects.filter(
+          user1_id=self.user1.id, 
+          user2_id=self.user2.id)
+        )

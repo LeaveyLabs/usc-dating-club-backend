@@ -696,3 +696,24 @@ class GetPageOrder(ListAPIView):
           ["personality", "preferences", "values", "lifestyle",],
           status.HTTP_200_OK,
         )
+  
+# Force Create Match
+class ForceCreateMatchSerializer(Serializer):
+    user1_id = IntegerField()
+    user2_id = IntegerField()
+
+class ForceCreateMatch(CreateAPIView):
+    serializer_class = ForceCreateMatchSerializer
+    def create(self, request, *args, **kwargs):
+        match_request = ForceCreateMatchSerializer(data=request.data)
+        match_request.is_valid(raise_exception=True)
+        user1_id = match_request.data.get('user1_id')
+        user2_id = match_request.data.get('user2_id')
+
+        Match.objects.filter(user1_id=user1_id, user2_id=user2_id).delete()
+        Match.objects.create(user1_id=user1_id, user2_id=user2_id)
+
+        return Response(
+          match_request.data,
+          status.HTTP_201_CREATED,
+        )
