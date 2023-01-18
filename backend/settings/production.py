@@ -2,7 +2,7 @@ import os
 
 from backend.settings.base import *
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "https://usc-dating-club.herokuapp.com",
