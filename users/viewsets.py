@@ -27,10 +27,7 @@ class MatchSerializer(ModelSerializer):
     class Meta:
         """ JSON fields from Match """
         model = Match
-        fields = (
-            'user1_id',
-            'user2_id',
-        )
+        fields = '__all__'
 
 class WaitingEmailSerializer(ModelSerializer):
     class Meta:
