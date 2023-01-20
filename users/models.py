@@ -1,4 +1,5 @@
 """ Defines database models for Users """
+import math
 import os
 import random
 from uuid import uuid4
@@ -150,6 +151,7 @@ class Match(models.Model):
         return f'{receiver_name}, you matched with {sender_name}!'
 
     def initial_match_payload(self, user, partner) -> dict:
+        # return all user survey responses
         return {
             'id': partner.id,
             'first_name': partner.first_name,
@@ -237,13 +239,24 @@ class Question(models.Model):
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
     text_answer_choices = ArrayField(models.TextField(), default=list, blank=True)
-    std_dev = models.FloatField(null=True, blank=True)
-    avg = models.FloatField(null=True, blank=True)
+    average = models.FloatField(default=0)
+
+    def calculate_average(self):
+        if not self.is_numerical:
+            return 0
+        
+        numerical_responses = self.numerical_responses.all()
+        return sum([response.answer for response in numerical_responses])/len(numerical_responses)
 
 class NumericalResponse(models.Model):
     question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="numerical_responses", on_delete=models.CASCADE)
     answer = models.FloatField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.question.calculate_average()
+        self.question.save()
 
 class TextResponse(models.Model):
     question = models.ForeignKey(Question, related_name="text_responses", on_delete=models.CASCADE)

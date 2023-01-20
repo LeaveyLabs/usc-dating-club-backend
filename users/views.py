@@ -496,18 +496,23 @@ class UpdateLocation(UpdateAPIView):
         compatible_numerical_responses = Q()
         compatible_text_responses = Q()
 
-        # average score + standard deviation
-        
+        # either both above average or below average        
         for response in user.numerical_responses.all():
             compatible_numerical_responses |= (
-              Q(numerical_responses__question_id=response.question_id)&
-              Q(numerical_responses__answer__lte=response.answer*1.25)&
-              Q(numerical_responses__answer__gte=response.answer*.75)           
+              (
+                Q(numerical_responses__question_id=response.question_id)&
+                Q(numerical_responses__question__average__lte=response.answer)&
+                Q(numerical_responses__answer__lte=response.answer)
+              ) | (
+                Q(numerical_responses__question_id=response.question_id)&
+                Q(numerical_responses__question__average__gte=response.answer)&
+                Q(numerical_responses__answer__gte=response.answer)
+              )
             )
         for response in user.text_responses.all():
             compatible_text_responses |= (
               Q(text_responses__question_id=response.question_id)&
-              Q(text_responses__answer=response.answer)        
+              Q(text_responses__answer=response.answer)
             )
 
         compatible_numerical_count = Count(
@@ -576,6 +581,9 @@ class UpdateLocation(UpdateAPIView):
           recent_update&
           is_matchable
         )
+
+        if not nearby_users.exists(): return
+
         compatible_users = self.filter_compatible_users(
           user=user, 
           nearby_users=nearby_users
