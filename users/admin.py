@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import BannedEmail, EmailAuthentication, PhoneAuthentication, User, Match, Notification, NumericalResponse, TextResponse, Question, WaitingEmail
+from users.models import BannedEmail, EmailAuthentication, PhoneAuthentication, User, Match, Notification, NumericalResponse, TextResponse, BaseQuestion, WaitingEmail
 
 admin.site.register(User)
 
@@ -11,7 +11,7 @@ admin.site.register(User)
     Notification, 
     NumericalResponse,
     TextResponse,
-    Question,
+    BaseQuestion,
     WaitingEmail,
     BannedEmail)
 class UniversalAdmin(admin.ModelAdmin):

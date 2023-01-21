@@ -1,8 +1,8 @@
 """ Defines REST viewsets for all models """
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from rest_framework.serializers import ModelSerializer
-from users.models import User, Match, Question, NumericalResponse, TextResponse, WaitingEmail, BannedEmail
+from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail
 
 
 """ Serializers """
@@ -42,9 +42,57 @@ class BannedEmailSerializer(ModelSerializer):
         fields = '__all__'
 
 class QuestionSerializer(ModelSerializer):
+    is_numerical = SerializerMethodField()
+    is_multiple_answer = SerializerMethodField()
+    text_answer_choices = SerializerMethodField()
+
     class Meta:
         """ JSON fields from Question """
-        model = Question
+        model = BaseQuestion
+        fields = '__all__'
+
+    def get_is_numerical(self, obj):
+        return NumericalQuestion.objects.\
+            filter(base_question_id=obj.id).exists()
+    
+    def get_is_multiple_answer(self, obj):
+        text_questions = TextQuestion.objects.\
+            filter(base_question_id=obj.id)
+        if not text_questions.exists():
+            return False
+        return text_questions[0].is_multiple_answer
+
+    def get_text_answer_choices(self, obj):
+        text_questions = TextQuestion.objects.\
+            filter(base_question_id=obj.id).\
+            prefetch_related('text_answer_choices')
+        if not text_questions.exists():
+            return []
+        return [text_answer_choice.answer 
+        for text_answer_choice in 
+        text_questions.text_answer_choices.all()]
+
+class CategorySerializer(ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+class NumericalQuestionSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from Question """
+        model = NumericalQuestion
+        fields = '__all__'
+
+class TextQuestionSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from Question """
+        model = TextQuestion
+        fields = '__all__'
+
+class TextAnswerChoiceSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from Question """
+        model = TextAnswerChoice
         fields = '__all__'
 
 class NumericalResponseSerializer(ModelSerializer):
@@ -95,13 +143,40 @@ class MatchViewset(viewsets.ModelViewSet):
     permission_class = [AllowAny, ]
     queryset = Match.objects.all()
 
+class CategoryViewset(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    permission_class = [AllowAny, ]
+    queryset = Category.objects.all()
+
 class QuestionViewset(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing question instances.
     """
     serializer_class = QuestionSerializer
     permission_class = [AllowAny, ]
-    queryset = Question.objects.all()
+    queryset = BaseQuestion.objects.all()
+
+class TextQuestionViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing question instances.
+    """
+    serializer_class = TextQuestionSerializer
+    permission_class = [AllowAny, ]
+    queryset = TextQuestion.objects.all()
+
+class NumericalQuestionViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing question instances.
+    """
+    serializer_class = NumericalQuestionSerializer
+    permission_class = [AllowAny, ]
+    queryset = NumericalQuestion.objects.all()
+
+class TextAnswerChoiceViewset(viewsets.ModelViewSet):
+    serializer_class = TextAnswerChoiceSerializer
+    permission_class = [AllowAny, ]
+    queryset = TextAnswerChoice.objects.all()
+
 
 class NumericalResponseViewset(viewsets.ModelViewSet):
     """

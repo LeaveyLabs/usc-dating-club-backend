@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
-from users.models import EmailAuthentication, Match, NumericalResponse, PhoneAuthentication, Question, TextResponse, User, WaitingEmail
+from users.models import EmailAuthentication, Match, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User, WaitingEmail
 
 import sys
 sys.path.append(".")
@@ -391,26 +391,34 @@ class PostSurveyAnswers(CreateAPIView):
             question_id = q_response.get('question_id')
             answer = q_response.get('answer')
 
-            questions = Question.objects.filter(id=question_id)
+            questions = BaseQuestion.objects.filter(id=question_id).prefetch_related(
+              'numerical_question', 
+              'text_question',
+            )
 
             if not questions.exists():
                 continue
 
             question = questions[0]
 
-            if question.is_numerical:
+            numerical_questions = NumericalQuestion.objects.filter(base_question_id=question.id)
+            text_questions = TextQuestion.objects.filter(base_question_id=question.id)
+
+            if numerical_questions.exists():
+                numerical_question = numerical_questions[0]
                 try:
-                    answer = float(answer)
                     NumericalResponse.objects.create(
-                      question_id=question_id,
-                      answer=answer,
+                      question_id=numerical_question.id,
+                      answer=float(answer),
                       user=user_match,
                     )
                 except:
                     continue
-            else:
+            
+            if text_questions.exists():
+                text_question = text_questions[0]
                 TextResponse.objects.create(
-                  question_id=question_id,
+                  question_id=text_question.id,
                   answer=answer,
                   user=user_match,
                 )
@@ -688,17 +696,17 @@ class AcceptMatch(UpdateAPIView):
 # Get Question List
 class QuestionSerializer(ModelSerializer):
     class Meta:
-        model = Question
+        model = BaseQuestion
         fields = '__all__'
 
 class GetQuestions(ListAPIView):
     serializer_class = QuestionSerializer
     permission_class = [AllowAny, ]
-    queryset = Question.objects.all()
+    queryset = BaseQuestion.objects.all()
 
 
 class GetPageOrder(ListAPIView):
-    queryset = Question.objects.all()
+    queryset = BaseQuestion.objects.all()
     def list(self, request, *args, **kwargs):
         return Response(
           ["personality", "preferences", "values", "lifestyle",],

@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import EmailAuthentication, Match, Notification, NumericalResponse, PhoneAuthentication, Question, TextResponse, User
+from users.models import EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
 from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, GetQuestions, PostSurveyAnswers, QuestionSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
@@ -290,11 +290,13 @@ class UpdateLocationTest(TestCase):
         self.user1.longitude = 0
         self.user1.save()
 
-        Question.objects.create(id=1, category='test1', is_numerical=True)
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
         NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
         NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
 
-        Question.objects.create(id=2, category='test2', is_numerical=False)
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
         TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
         TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
 
@@ -355,11 +357,13 @@ class UpdateLocationTest(TestCase):
         self.user1.longitude = 0
         self.user1.save()
 
-        Question.objects.create(id=1, category='test1', is_numerical=True)
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
         NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
         NumericalResponse.objects.create(question_id=1, answer=7, user=self.user2)
 
-        Question.objects.create(id=2, category='test2', is_numerical=False)
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
         TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
         TextResponse.objects.create(question_id=2, answer='goodbye', user=self.user2)
 
@@ -410,18 +414,17 @@ class UpdateLocationTest(TestCase):
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):
         self.user1 = random_user(1, User.SexChoices.MALE, User.SexChoices.FEMALE)
-
         self.user1.save()
 
-        Question.objects.create(id=0, category=0, is_numerical=True)
-        Question.objects.create(id=1, category=1, is_numerical=True)
-        Question.objects.create(id=2, category=2, is_numerical=True)
+        BaseQuestion.objects.create(id=0)
+        BaseQuestion.objects.create(id=1)
+        BaseQuestion.objects.create(id=2)
     
     def test_basic_numerical_survey_answers_should_create_numerical_responses(self):
         """ Post (0-2, 1-3) tuples with an existing user """
-        Question.objects.filter(id=0).update(is_numerical=True)
-        Question.objects.filter(id=1).update(is_numerical=True)
-        Question.objects.filter(id=2).update(is_numerical=True)
+        NumericalQuestion.objects.create(base_question_id=0)
+        NumericalQuestion.objects.create(base_question_id=1)
+        NumericalQuestion.objects.create(base_question_id=2)
 
         request = APIRequestFactory().post(
           path='post-survey-answers/',
@@ -451,9 +454,9 @@ class PostSurveyAnswersTest(TestCase):
 
     def test_basic_text_survey_answers_should_create_text_responses(self):
         """ Post (0-2, 1-3) tuples with an existing user """
-        Question.objects.filter(id=0).update(is_numerical=False)
-        Question.objects.filter(id=1).update(is_numerical=False)
-        Question.objects.filter(id=2).update(is_numerical=False)
+        TextQuestion.objects.create(base_question_id=0)
+        TextQuestion.objects.create(base_question_id=1)
+        TextQuestion.objects.create(base_question_id=2)
 
         request = APIRequestFactory().post(
           path='post-survey-answers/',
@@ -483,9 +486,9 @@ class PostSurveyAnswersTest(TestCase):
 
     def test_basic_numerical_and_text_survey_answers_should_create_numerical_and_text_responses(self):
         """ Post (0-2, 1-3) tuples with an existing user """
-        Question.objects.filter(id=0).update(is_numerical=False)
-        Question.objects.filter(id=1).update(is_numerical=True)
-        Question.objects.filter(id=2).update(is_numerical=True)
+        TextQuestion.objects.create(base_question_id=0)
+        NumericalQuestion.objects.create(base_question_id=1)
+        NumericalQuestion.objects.create(base_question_id=2)
 
         request = APIRequestFactory().post(
           path='post-survey-answers/',
@@ -581,9 +584,9 @@ class UpdateMatchAcceptanceTest(TestCase):
 
 class GetQuestionsTest(TestCase):
     def setUp(self):
-        self.question0 = Question.objects.create(id=0, category=0, is_numerical=True)
-        self.question1 = Question.objects.create(id=1, category=1, is_numerical=True)
-        self.question2 = Question.objects.create(id=2, category=2, is_numerical=True)
+        self.question0 = BaseQuestion.objects.create(id=0)
+        self.question1 = BaseQuestion.objects.create(id=1)
+        self.question2 = BaseQuestion.objects.create(id=2)
 
     def test_basic_get_questions_returns_all_questions(self):
         questions_json = [

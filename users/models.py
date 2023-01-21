@@ -193,11 +193,11 @@ class Match(models.Model):
         serialized_text_similarities = []
 
         for response in similar_numerical_responses.all():
-            categories = response.question.category.split('/')
-            if len(categories) < 2: continue
-            trait1, trait2 = response.question.category.split('/')
+            category = response.question.base_question.category
+            if not category: continue
+            if not category.trait1 or not category.trait2: continue
             below_average = response.answer < response.question.average
-            trait =  trait1 if below_average else trait2
+            trait = category.trait1 if below_average else category.trait2
 
             serialized_numerical_similarities += {
                 'trait': trait,
@@ -207,8 +207,11 @@ class Match(models.Model):
             }
 
         for response in similar_text_responses.all():
+            category = response.question.base_question.category
+            if not category: continue
+            trait = response.question.base_question.category.trait1
             serialized_text_similarities += {
-                'trait': response.question.category,
+                'trait': trait,
                 'sharedResponse': response.answer,
             }
 
@@ -246,7 +249,11 @@ class Match(models.Model):
         }
     
 
-class Question(models.Model):
+class Category(models.Model):
+    trait1 = models.TextField()
+    trait2 = models.TextField(null=True, blank=True)
+
+class BaseQuestion(models.Model):
     """ Compatibility questions for matching users """
 
     """ Headers to display the questions """
@@ -296,24 +303,37 @@ class Question(models.Model):
     )
 
     header = models.TextField(choices=HEADER_TUPLES)
-    category = models.TextField(choices=CATEGORY_TUPLES)
+    category = models.ForeignKey(
+        Category,
+        related_name='questions',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     prompt = models.TextField()
-    is_numerical = models.BooleanField(default=False)
-    is_multiple_answer = models.BooleanField(default=False)
-    text_answer_choices = ArrayField(models.TextField(), default=list, blank=True)
+
+class NumericalQuestion(models.Model):
+    base_question = models.OneToOneField(BaseQuestion, related_name="numerical_question", on_delete=models.CASCADE)
     average = models.FloatField(default=3)
+    variance = models.FloatField(default=1)
     minimum = models.FloatField(default=0)
     maximum = models.FloatField(default=6)
 
     def calculate_average(self):
-        if not self.is_numerical:
-            return 0
-        
         numerical_responses = self.numerical_responses.all()
         return sum([response.answer for response in numerical_responses])/len(numerical_responses)
 
+class TextQuestion(models.Model):
+    base_question = models.OneToOneField(BaseQuestion, related_name="text_question", on_delete=models.CASCADE)
+    is_multiple_answer = models.BooleanField(default=False)
+
+class TextAnswerChoice(models.Model):
+    emoji = models.TextField()
+    answer = models.TextField()
+    question = models.ForeignKey(TextQuestion, related_name="text_answer_choices", on_delete=models.CASCADE)
+
 class NumericalResponse(models.Model):
-    question = models.ForeignKey(Question, related_name="numerical_responses", on_delete=models.CASCADE)
+    question = models.ForeignKey(NumericalQuestion, related_name="numerical_responses", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="numerical_responses", on_delete=models.CASCADE)
     answer = models.FloatField()
 
@@ -323,7 +343,7 @@ class NumericalResponse(models.Model):
         self.question.save()
 
 class TextResponse(models.Model):
-    question = models.ForeignKey(Question, related_name="text_responses", on_delete=models.CASCADE)
+    question = models.ForeignKey(TextQuestion, related_name="text_responses", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="text_responses", on_delete=models.CASCADE)
     answer = models.TextField()
 
