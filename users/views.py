@@ -514,7 +514,7 @@ class UpdateLocation(UpdateAPIView):
               Q(text_responses__question_id=response.question_id)&
               Q(text_responses__answer=response.answer)
             )
-
+        
         compatible_numerical_count = Count(
           'numerical_responses', 
           filter=compatible_numerical_responses

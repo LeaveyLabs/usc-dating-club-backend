@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from datetime import timedelta
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
@@ -151,7 +152,66 @@ class Match(models.Model):
         return f'{receiver_name}, you matched with {sender_name}!'
 
     def initial_match_payload(self, user, partner) -> dict:
-        # return all user survey responses
+        try:
+            user.numerical_responses
+            user.text_responses
+        except:
+            user.numerical_responses = NumericalResponse.objects.filter(user=user)
+            user.text_responses = TextResponse.objects.filter(user=user)
+        
+        compatible_numerical_responses = Q()
+        for response in user.numerical_responses.all():
+            compatible_numerical_responses |= (
+              (
+                Q(question_id=response.question_id)&
+                Q(question__average__lte=response.answer)&
+                Q(answer__lte=response.answer)
+              ) | (
+                Q(question_id=response.question_id)&
+                Q(question__average__gte=response.answer)&
+                Q(answer__gte=response.answer)
+              )
+            )
+        
+        compatible_text_responses = Q()
+        for response in user.text_responses.all():
+            compatible_text_responses |= (
+              Q(question_id=response.question_id)&
+              Q(answer=response.answer)
+            )
+        
+        similar_numerical_responses = NumericalResponse.objects.filter(
+           Q(user=partner)&
+           compatible_numerical_responses
+        )
+        similar_text_responses = TextResponse.objects.filter(
+           Q(user=partner)&
+           compatible_text_responses
+        )
+
+        serialized_numerical_similarities = []
+        serialized_text_similarities = []
+
+        for response in similar_numerical_responses.all():
+            categories = response.question.category.split('/')
+            if len(categories) < 2: continue
+            trait1, trait2 = response.question.category.split('/')
+            below_average = response.answer < response.question.average
+            trait =  trait1 if below_average else trait2
+
+            serialized_numerical_similarities += {
+                'trait': trait,
+                'avgPercent': random.randint(85, 99),
+                'youPercent': random.randint(85, 99),
+                'partnerPercent': random.randint(85, 99),
+            }
+
+        for response in similar_text_responses.all():
+            serialized_text_similarities += {
+                'trait': response.question.category,
+                'sharedResponse': response.answer,
+            }
+
         return {
             'id': partner.id,
             'first_name': partner.first_name,
@@ -165,6 +225,8 @@ class Match(models.Model):
                 partner.latitude),
             'latitude': partner.latitude,
             'longitude': partner.longitude,
+            'numericalSimilarities': serialized_numerical_similarities,
+            'textSimilarities': serialized_text_similarities,
         }
 
     def accept_match_payload(self, user, partner) -> dict:
@@ -239,7 +301,9 @@ class Question(models.Model):
     is_numerical = models.BooleanField(default=False)
     is_multiple_answer = models.BooleanField(default=False)
     text_answer_choices = ArrayField(models.TextField(), default=list, blank=True)
-    average = models.FloatField(default=0)
+    average = models.FloatField(default=3)
+    minimum = models.FloatField(default=0)
+    maximum = models.FloatField(default=6)
 
     def calculate_average(self):
         if not self.is_numerical:

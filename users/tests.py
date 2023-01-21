@@ -347,7 +347,7 @@ class UpdateLocationTest(TestCase):
         self.assertFalse(Notification.objects.filter(user=self.user1))
         self.assertFalse(Notification.objects.filter(user=self.user2))
 
-    def test_basic_location_update_near_test_incompatible_user_matches_user(self):
+    def test_basic_location_update_near_test_incompatible_user_does_not_match_user(self):
         """" 
         Very different test results.
         """
