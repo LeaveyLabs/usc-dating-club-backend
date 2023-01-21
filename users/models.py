@@ -259,6 +259,9 @@ class Category(models.Model):
     trait1 = models.TextField()
     trait2 = models.TextField(null=True, blank=True)
 
+    def __str__(self) -> str:
+        return str(self.trait1)
+
 class BaseQuestion(models.Model):
     """ Compatibility questions for matching users """
 
