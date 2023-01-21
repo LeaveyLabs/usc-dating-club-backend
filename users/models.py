@@ -210,9 +210,15 @@ class Match(models.Model):
             category = response.question.base_question.category
             if not category: continue
             trait = response.question.base_question.category.trait1
+            answer_choices = TextAnswerChoice.objects.filter(
+                question_id=response.question.id,
+                answer=response.answer,
+            )
+            emoji = answer_choices[0].emoji if answer_choices.exists() else '❤️'
             serialized_text_similarities += {
                 'trait': trait,
                 'sharedResponse': response.answer,
+                'emoji': emoji,
             }
 
         return {
