@@ -19,13 +19,15 @@ from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
 from rest_framework import routers
 
 from users.views import AcceptMatch, DeleteAccount, ForceCreateMatch, GetPageOrder, GetQuestions, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
-from users.viewsets import BannedEmailViewset, UserViewset, MatchViewset, QuestionViewset, NumericalResponseViewset, TextResponseViewset, WaitingEmailViewset
+from users.viewsets import BannedEmailViewset, NumericalQuestionViewset, TextQuestionViewset, UserViewset, MatchViewset, QuestionViewset, NumericalResponseViewset, TextResponseViewset, WaitingEmailViewset
 
 router = routers.DefaultRouter()
 router.register("devices", APNSDeviceAuthorizedViewSet)
 router.register("users", UserViewset)
 router.register("matches", MatchViewset)
 router.register("questions", QuestionViewset)
+router.register("numerical-questions", NumericalQuestionViewset)
+router.register("text-questions", TextQuestionViewset)
 router.register("numerical-responses", NumericalResponseViewset)
 router.register("text-responses", TextResponseViewset)
 router.register("waiting-emails", WaitingEmailViewset)
