@@ -68,9 +68,12 @@ class QuestionSerializer(ModelSerializer):
             prefetch_related('text_answer_choices')
         if not text_questions.exists():
             return []
-        return [text_answer_choice.answer 
-        for text_answer_choice in 
-        text_questions.text_answer_choices.all()]
+        text_question = text_questions[0]
+        return [
+            text_answer_choice.answer 
+            for text_answer_choice in 
+            text_question.text_answer_choices.all()
+        ]
 
 class CategorySerializer(ModelSerializer):
     class Meta:
