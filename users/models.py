@@ -273,37 +273,6 @@ class BaseQuestion(models.Model):
         "lifestyle",
     )
 
-    """ Measurement criteria """
-    CATEGORY_OPTIONS = (
-      # Single answer
-      'organized/chaotic',
-      'extraverted/introverted',
-      'sentimental/stoic',
-      'empathetic/intellectual',
-      'bold/patient',
-      'spontaneous/intentional',
-      'timely/flexible',
-      'agreeable/strong-willed',
-      'family-oriented/career-oriented',
-      'frugal/bougie',
-      'dog-lover/cat-lover',
-      'academic/artistic',
-      'minimalistic/materialistic',
-      'self-aware/blissfully-unaware',
-      'prudent/yolo',
-      'laid-back/straightedge',
-      'attentive/idgaf',
-      'early-bird/night-owl',
-      'open-minded/disciplined',
-      # Multiple answer
-      'languages',
-      'love-languages',
-      'politics',
-      'religion',
-      'diet',
-      'drugs',
-    )
-
     HEADER_TUPLES = (
         (header, header) for header in HEADER_OPTIONS
     )
@@ -335,6 +304,9 @@ class NumericalQuestion(models.Model):
 class TextQuestion(models.Model):
     base_question = models.OneToOneField(BaseQuestion, related_name="text_question", on_delete=models.CASCADE)
     is_multiple_answer = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.base_question.prompt)
 
 class TextAnswerChoice(models.Model):
     emoji = models.TextField()
