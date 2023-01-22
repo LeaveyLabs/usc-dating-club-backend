@@ -276,9 +276,6 @@ class BaseQuestion(models.Model):
     HEADER_TUPLES = (
         (header, header) for header in HEADER_OPTIONS
     )
-    CATEGORY_TUPLES = (
-        (category, category) for category in CATEGORY_OPTIONS
-    )
 
     header = models.TextField(choices=HEADER_TUPLES)
     category = models.ForeignKey(
@@ -296,6 +293,9 @@ class NumericalQuestion(models.Model):
     variance = models.FloatField(default=1)
     minimum = models.FloatField(default=0)
     maximum = models.FloatField(default=6)
+
+    def __str__(self):
+        return str(self.base_question.prompt) 
 
     def calculate_average(self):
         numerical_responses = self.numerical_responses.all()
