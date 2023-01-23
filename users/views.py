@@ -693,17 +693,6 @@ class AcceptMatch(UpdateAPIView):
           status.HTTP_200_OK,
         )
 
-# Get Question List
-class QuestionSerializer(ModelSerializer):
-    class Meta:
-        model = BaseQuestion
-        fields = '__all__'
-
-class GetQuestions(ListAPIView):
-    serializer_class = QuestionSerializer
-    permission_class = [AllowAny, ]
-    queryset = BaseQuestion.objects.all()
-
 
 class GetPageOrder(ListAPIView):
     queryset = BaseQuestion.objects.all()
