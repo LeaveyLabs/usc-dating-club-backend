@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
-from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, GetQuestions, PostSurveyAnswers, QuestionSerializer, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -580,29 +580,7 @@ class UpdateMatchAcceptanceTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Match.objects.get(user1_id=self.user1.id).user1_accepted)
-  
 
-class GetQuestionsTest(TestCase):
-    def setUp(self):
-        self.question0 = BaseQuestion.objects.create(id=0)
-        self.question1 = BaseQuestion.objects.create(id=1)
-        self.question2 = BaseQuestion.objects.create(id=2)
-
-    def test_basic_get_questions_returns_all_questions(self):
-        questions_json = [
-            QuestionSerializer(self.question0).data,
-            QuestionSerializer(self.question1).data,
-            QuestionSerializer(self.question2).data,
-        ]
-        request = APIRequestFactory().get(
-          path='get-questions/',
-        )
-        response = GetQuestions.as_view()(request)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(response.data[0], questions_json[0])
-        self.assertCountEqual(response.data[1], questions_json[1])
-        self.assertCountEqual(response.data[2], questions_json[2])
 
 class ForceCreateMatchTest(TestCase):
     def setUp(self):
