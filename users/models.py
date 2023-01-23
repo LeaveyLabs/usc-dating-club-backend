@@ -201,9 +201,9 @@ class Match(models.Model):
 
             serialized_numerical_similarities += {
                 'trait': trait,
-                'avgPercent': random.randint(85, 99),
-                'youPercent': random.randint(85, 99),
-                'partnerPercent': random.randint(85, 99),
+                'avg_percent': random.randint(85, 99),
+                'you_percent': random.randint(85, 99),
+                'partner_percent': random.randint(85, 99),
             }
 
         for response in similar_text_responses.all():
@@ -217,7 +217,7 @@ class Match(models.Model):
             emoji = answer_choices[0].emoji if answer_choices.exists() else '❤️'
             serialized_text_similarities += {
                 'trait': trait,
-                'sharedResponse': response.answer,
+                'shared_response': response.answer,
                 'emoji': emoji,
             }
 
@@ -234,8 +234,8 @@ class Match(models.Model):
                 partner.latitude),
             'latitude': partner.latitude,
             'longitude': partner.longitude,
-            'numericalSimilarities': serialized_numerical_similarities,
-            'textSimilarities': serialized_text_similarities,
+            'numerical_similarities': serialized_numerical_similarities,
+            'text_similarities': serialized_text_similarities,
         }
 
     def accept_match_payload(self, user, partner) -> dict:
