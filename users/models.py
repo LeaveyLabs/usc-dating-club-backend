@@ -234,8 +234,10 @@ class Match(models.Model):
                 partner.latitude),
             'latitude': partner.latitude,
             'longitude': partner.longitude,
-            'numerical_similarities': serialized_numerical_similarities,
-            'text_similarities': serialized_text_similarities,
+            'numerical_similarities': [],
+            'text_similarities': [],
+            # 'numerical_similarities': serialized_numerical_similarities,
+            # 'text_similarities': serialized_text_similarities,
         }
 
     def accept_match_payload(self, user, partner) -> dict:
