@@ -151,7 +151,7 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def initial_match_payload(self, user, partner) -> dict:
+    def initial_match_payload(self, partner, user) -> dict:
         try:
             user.numerical_responses
             user.text_responses
