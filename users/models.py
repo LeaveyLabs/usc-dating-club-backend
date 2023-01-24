@@ -221,6 +221,11 @@ class Match(models.Model):
                 'emoji': emoji,
             })
 
+        if len(serialized_numerical_similarities) < 3:
+            num_needed_defaults = 3 - len(serialized_numerical_similarities)
+            defaults = self.default_numerical_similarities()
+            serialized_numerical_similarities += defaults[:num_needed_defaults]
+
         return {
             'id': partner.id,
             'first_name': partner.first_name,
@@ -255,6 +260,28 @@ class Match(models.Model):
             'latitude': partner.latitude,
             'longitude': partner.longitude,
         }
+
+    def default_numerical_similarities(self):
+        return [
+            {
+                'trait': 'open-minded',
+                'avg_percent': random.randint(85, 99),
+                'you_percent': random.randint(85, 99),
+                'partner_percent': random.randint(85, 99),
+            },
+            {
+                'trait': 'intentional',
+                'avg_percent': random.randint(85, 99),
+                'you_percent': random.randint(85, 99),
+                'partner_percent': random.randint(85, 99),
+            },
+            {
+                'trait': 'empathetic',
+                'avg_percent': random.randint(85, 99),
+                'you_percent': random.randint(85, 99),
+                'partner_percent': random.randint(85, 99),
+            }
+        ]
     
 
 class Category(models.Model):
