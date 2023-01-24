@@ -199,12 +199,12 @@ class Match(models.Model):
             below_average = response.answer < response.question.average
             trait = category.trait1 if below_average else category.trait2
 
-            serialized_numerical_similarities += {
+            serialized_numerical_similarities.append({
                 'trait': trait,
                 'avg_percent': random.randint(85, 99),
                 'you_percent': random.randint(85, 99),
                 'partner_percent': random.randint(85, 99),
-            }
+            })
 
         for response in similar_text_responses.all():
             category = response.question.base_question.category
@@ -215,11 +215,11 @@ class Match(models.Model):
                 answer=response.answer,
             )
             emoji = answer_choices[0].emoji if answer_choices.exists() else '❤️'
-            serialized_text_similarities += {
+            serialized_text_similarities.append({
                 'trait': trait,
                 'shared_response': response.answer,
                 'emoji': emoji,
-            }
+            })
 
         return {
             'id': partner.id,
@@ -234,10 +234,10 @@ class Match(models.Model):
                 partner.latitude),
             'latitude': partner.latitude,
             'longitude': partner.longitude,
-            'numerical_similarities': [],
-            'text_similarities': [],
-            # 'numerical_similarities': serialized_numerical_similarities,
-            # 'text_similarities': serialized_text_similarities,
+            # 'numerical_similarities': [],
+            # 'text_similarities': [],
+            'numerical_similarities': serialized_numerical_similarities,
+            'text_similarities': serialized_text_similarities,
         }
 
     def accept_match_payload(self, user, partner) -> dict:
@@ -322,8 +322,8 @@ class NumericalResponse(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.question.calculate_average()
-        self.question.save()
+        # self.question.calculate_average()
+        # self.question.save()
 
 class TextResponse(models.Model):
     question = models.ForeignKey(TextQuestion, related_name="text_responses", on_delete=models.CASCADE)

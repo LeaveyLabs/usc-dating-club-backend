@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
+from users.models import Category, EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
 from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
@@ -610,3 +610,59 @@ class ForceCreateMatchTest(TestCase):
           user1_id=self.user1.id, 
           user2_id=self.user2.id)
         )
+
+
+class MatchNotificationTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1, 'f', 'm')
+        self.user2 = random_user(2, 'm', 'f')
+
+        self.user1.save()
+        self.user2.save()
+
+        self.initialize_questions()
+
+
+    def initialize_questions(self):
+        Category.objects.create(id=1, trait1='hi', trait2='hi')
+
+        BaseQuestion.objects.create(id=1, category_id=1)
+        BaseQuestion.objects.create(id=2, category_id=1)
+        BaseQuestion.objects.create(id=3, category_id=1)
+        BaseQuestion.objects.create(id=4, category_id=1)
+        BaseQuestion.objects.create(id=5, category_id=1)
+        BaseQuestion.objects.create(id=6, category_id=1)        
+
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalQuestion.objects.create(id=2, base_question_id=2)
+        NumericalQuestion.objects.create(id=3, base_question_id=3)
+
+        TextQuestion.objects.create(id=1, base_question_id=3)
+        TextQuestion.objects.create(id=2, base_question_id=4)
+        TextQuestion.objects.create(id=3, base_question_id=5)
+
+    def initialize_identical_responses(self):
+        NumericalResponse.objects.create(user=self.user1, question_id=1, answer=1)
+        NumericalResponse.objects.create(user=self.user1, question_id=2, answer=1)
+        NumericalResponse.objects.create(user=self.user1, question_id=3, answer=1)
+        
+        NumericalResponse.objects.create(user=self.user2, question_id=1, answer=1)
+        NumericalResponse.objects.create(user=self.user2, question_id=2, answer=1)
+        NumericalResponse.objects.create(user=self.user2, question_id=3, answer=1)
+
+        TextResponse.objects.create(user=self.user1, question_id=1, answer='a')
+        TextResponse.objects.create(user=self.user1, question_id=2, answer='b')
+        TextResponse.objects.create(user=self.user1, question_id=3, answer='c')
+        
+        TextResponse.objects.create(user=self.user2, question_id=1, answer='a')
+        TextResponse.objects.create(user=self.user2, question_id=2, answer='b')
+        TextResponse.objects.create(user=self.user2, question_id=3, answer='c')
+
+    def test_initial_match_payload_returns_all_matching_compatibilites(self):
+        self.initialize_identical_responses()
+        match = Match.objects.create(user1=self.user1, user2=self.user2)
+        payload = match.initial_match_payload(self.user1, self.user2)
+
+        self.assertEqual(len(payload.get('numerical_similarities')), 3)
+        self.assertEqual(len(payload.get('text_similarities')), 3)
+
