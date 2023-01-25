@@ -2,7 +2,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail
+from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail, Message
 
 
 """ Serializers """
@@ -110,6 +110,11 @@ class TextResponseSerializer(ModelSerializer):
         model = TextResponse
         fields = '__all__'
 
+class MessageSerializer(ModelSerializer):
+    class Meta:
+        model = Message
+        fields = '__all__'
+
 
 """ Viewsets """
 
@@ -196,3 +201,12 @@ class TextResponseViewset(viewsets.ModelViewSet):
     serializer_class = TextResponseSerializer
     permission_class = [AllowAny, ]
     queryset = TextResponse.objects.all()
+
+class MessageViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing message instances.
+    """
+    serializer_class = MessageSerializer
+    permission_class = [AllowAny, ]
+    queryset = Message.objects.all()
+    
