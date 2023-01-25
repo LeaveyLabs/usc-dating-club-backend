@@ -673,3 +673,12 @@ class MatchNotificationTest(TestCase):
         self.assertEqual(len(payload.get('numerical_similarities')), 3)
         self.assertEqual(len(payload.get('text_similarities')), 0)
 
+    def test_initial_match_payload_with_same_seed_returns_identical_matching_compatibilites(self):
+        test_seed = 15
+        match = Match.objects.create(user1=self.user1, user2=self.user2)
+        payload1 = match.initial_match_payload(self.user1, self.user2, test_seed)
+        payload2 = match.initial_match_payload(self.user1, self.user2, test_seed)
+
+        self.assertEqual(payload1.get('numerical_similarities'), payload2.get('numerical_similarities'))
+        self.assertEqual(payload1.get('text_similarities'), payload2.get('text_similarities'))
+

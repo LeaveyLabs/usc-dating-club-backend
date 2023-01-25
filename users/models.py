@@ -116,42 +116,44 @@ class Match(models.Model):
     
     def send_initial_match_notifications(self) -> None:
         """ Notifies users that they've been matched """
+        seed = random.randint(0, 1000)
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.initial_match_payload(self.user2, self.user1),
+            data=self.initial_match_payload(self.user2, self.user1, seed),
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.initial_match_payload(self.user1, self.user2),
+            data=self.initial_match_payload(self.user1, self.user2, seed),
             sound=self.MATCH_SOUND,
           ),
         ])
     
     def send_accept_match_notifications(self) -> None:
         """ Notifies users that their match was accepted """
+        seed = random.randint(0, 1000)
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user2, self.user1),
+            data=self.accept_match_payload(self.user2, self.user1, seed),
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user1, self.user2),
+            data=self.accept_match_payload(self.user1, self.user2, seed),
           ),
         ])
 
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def initial_match_payload(self, partner, user) -> dict:
+    def initial_match_payload(self, partner, user, seed=0) -> dict:
         try:
             user.numerical_responses
             user.text_responses
@@ -192,6 +194,8 @@ class Match(models.Model):
         serialized_numerical_similarities = []
         serialized_text_similarities = []
 
+        random.seed(seed)
+
         for response in similar_numerical_responses.all():
             category = response.question.base_question.category
             if not category: continue
@@ -201,7 +205,7 @@ class Match(models.Model):
 
             serialized_numerical_similarities.append({
                 'trait': trait,
-                'avg_percent': random.randint(85, 99),
+                'avg_percent': random.randint(35, 65),
                 'you_percent': random.randint(85, 99),
                 'partner_percent': random.randint(85, 99),
             })
@@ -225,6 +229,17 @@ class Match(models.Model):
             num_needed_defaults = 3 - len(serialized_numerical_similarities)
             defaults = self.default_numerical_similarities()
             serialized_numerical_similarities += defaults[:num_needed_defaults]
+        else:
+            serialized_numerical_similarities = random.choices(
+                serialized_numerical_similarities,
+                k=3,
+            )
+
+        if len(serialized_text_similarities) > 3:
+            serialized_text_similarities = random.choices(
+                serialized_text_similarities,
+                k=3,
+            )
 
         return {
             'id': partner.id,
@@ -239,8 +254,6 @@ class Match(models.Model):
                 partner.latitude),
             'latitude': partner.latitude,
             'longitude': partner.longitude,
-            # 'numerical_similarities': [],
-            # 'text_similarities': [],
             'numerical_similarities': serialized_numerical_similarities,
             'text_similarities': serialized_text_similarities,
         }
