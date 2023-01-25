@@ -144,11 +144,13 @@ class Match(models.Model):
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
+            message='accept!',
             type=Notification.Choices.ACCEPT,
             data=payload1,
           ),
           Notification(
             user=self.user2,
+            message='accept!',
             type=Notification.Choices.ACCEPT,
             data=payload2,
           ),
@@ -432,20 +434,11 @@ class Notification(models.Model):
     sound = models.TextField(null=True)
 
     def send_to_device(self) -> None:
-        applicable_devices = APNSDevice.objects.filter(user=self.user)
-        if self.message:
-            applicable_devices.send_message(
-                message=self.message,
-                sound=self.sound,
-                extra={
-                    "type": self.type,
-                    "data": self.data,
-                }
-            )
-        else:
-            applicable_devices.send_message(
-                extra={
-                    "type": self.type,
-                    "data": self.data,
-                }
-            )
+        APNSDevice.objects.filter(user=self.user).send_message(
+            message=self.message,
+            sound=self.sound,
+            extra={
+                "type": self.type,
+                "data": self.data,
+            }
+        )
