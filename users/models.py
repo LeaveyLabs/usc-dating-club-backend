@@ -147,6 +147,7 @@ class Match(models.Model):
           Notification(
             user=self.user1,
             message=self.accept_message(self.user2.first_name),
+            type=Notification.Choices.ACCEPT,
             data=payload1,
           ),
           Notification(
