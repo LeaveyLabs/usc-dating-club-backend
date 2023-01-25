@@ -139,7 +139,7 @@ class Match(models.Model):
     def send_accept_match_notifications(self) -> None:
         """ Notifies users that their match was accepted """
         payload1 = self.accept_match_payload(self.user2, self.user1)
-        payload2 = self.flip_match_payload(payload1)
+        payload2 = self.flip_match_payload(self.user1, payload1)
         
         Notification.objects.bulk_create([
           Notification(
@@ -157,7 +157,7 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def flip_match_payload(self, payload) -> dict:
+    def flip_match_payload(self, partner, payload) -> dict:
         payload_copy = dict(payload)
         numerical_similarities = payload_copy.get('numerical_similarities')
         for i, similarity in enumerate(numerical_similarities):
@@ -165,6 +165,11 @@ class Match(models.Model):
             partner = similarity.get('partner_percent')
             payload_copy['numerical_similarities'][i]['you_percent'] = partner
             payload_copy['numerical_similarities'][i]['partner_percent'] = you
+        
+        payload_copy['id'] = partner.id
+        payload_copy['first_name'] = partner.first_name
+        payload_copy['email'] = partner.email
+
         return payload_copy
 
     def initial_match_payload(self, partner, user) -> dict:
