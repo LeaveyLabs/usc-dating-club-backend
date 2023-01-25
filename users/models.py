@@ -119,18 +119,20 @@ class Match(models.Model):
         payload1 = self.initial_match_payload(self.user2, self.user1)
         payload2 = self.flip_match_payload(self.user1, payload1)
 
+        compatibility = payload1['compatibility']
+
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.MATCH,
-            message=self.match_message(self.user1.first_name, self.user2.first_name),
+            message=self.match_message(self.user2.first_name, compatibility),
             data=payload1,
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
-            message=self.match_message(self.user2.first_name, self.user1.first_name),
+            message=self.match_message(self.user1.first_name, compatibility),
             data=payload2,
             sound=self.MATCH_SOUND,
           ),
@@ -144,20 +146,22 @@ class Match(models.Model):
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
-            message='accept!',
-            type=Notification.Choices.ACCEPT,
+            message=self.accept_message(self.user1.first_name, self.user2.first_name),
             data=payload1,
           ),
           Notification(
             user=self.user2,
-            message='accept!',
+            message=self.accept_message(self.user2.first_name, self.user1.first_name),
             type=Notification.Choices.ACCEPT,
             data=payload2,
           ),
         ])
 
-    def match_message(self, receiver_name, sender_name) -> str:
-        return f'{receiver_name}, you matched with {sender_name}!'
+    def match_message(self, sender_name, comptability) -> str:
+        return f'{sender_name} is nearby and {comptability}% compatible with you. you have 5 minutes to respond'
+
+    def accept_message(self, sender_name) -> str:
+        return f'{sender_name} is down to meet up. you have 5 minutes to go and say hi'
 
     def flip_match_payload(self, partner, payload) -> dict:
         payload_copy = dict(payload)
