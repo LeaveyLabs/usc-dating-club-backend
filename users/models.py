@@ -426,7 +426,7 @@ class Notification(models.Model):
 
     user = models.ForeignKey(User, related_name="notifications", on_delete=models.CASCADE)
     type = models.CharField(max_length=15, choices=NOTIFICATION_OPTIONS,)
-    message = models.TextField()
+    message = models.TextField(default='')
     data = models.JSONField(null=True, blank=True)
     time = models.DateTimeField(default=timezone.now)
     sound = models.TextField(null=True)
