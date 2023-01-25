@@ -136,24 +136,36 @@ class Match(models.Model):
     
     def send_accept_match_notifications(self) -> None:
         """ Notifies users that their match was accepted """
-        seed = random.randint(0, 1000)
+        payload1 = self.accept_match_payload(self.user2, self.user1)
+        payload2 = self.flip_match_payload(payload1)
+        
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user2, self.user1, seed),
+            data=payload1,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.ACCEPT,
-            data=self.accept_match_payload(self.user1, self.user2, seed),
+            data=payload2,
           ),
         ])
 
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def initial_match_payload(self, partner, user, seed=0) -> dict:
+    def flip_match_payload(payload):
+        payload_copy = dict(payload)
+        numerical_similarities = payload_copy.get('numerical_similarities')
+        for similarity in numerical_similarities:
+            you = similarity.get('you_percent')
+            partner = similarity.get('partner_percent')
+            payload_copy['numerical_similarities']['you_percent'] = partner
+            payload_copy['numerical_similarities']['partner_percent'] = you
+        return payload_copy
+
+    def initial_match_payload(self, partner, user, seed=0, order=0) -> dict:
         try:
             user.numerical_responses
             user.text_responses
@@ -227,7 +239,7 @@ class Match(models.Model):
 
         if len(serialized_numerical_similarities) < 3:
             num_needed_defaults = 3 - len(serialized_numerical_similarities)
-            defaults = self.default_numerical_similarities()
+            defaults = self.default_numerical_similarities(order=order)
             serialized_numerical_similarities += defaults[:num_needed_defaults]
         else:
             serialized_numerical_similarities = random.choices(
@@ -274,27 +286,20 @@ class Match(models.Model):
             'longitude': partner.longitude,
         }
 
-    def default_numerical_similarities(self):
-        return [
-            {
-                'trait': 'open-minded',
-                'avg_percent': random.randint(85, 99),
-                'you_percent': random.randint(85, 99),
-                'partner_percent': random.randint(85, 99),
-            },
-            {
-                'trait': 'intentional',
-                'avg_percent': random.randint(85, 99),
-                'you_percent': random.randint(85, 99),
-                'partner_percent': random.randint(85, 99),
-            },
-            {
-                'trait': 'empathetic',
-                'avg_percent': random.randint(85, 99),
-                'you_percent': random.randint(85, 99),
-                'partner_percent': random.randint(85, 99),
-            }
-        ]
+    def default_numerical_similarities(self, order=0):
+        traits = ['open-minded', 'intentional', 'empathetic']
+        random_percents = [random.randint(85, 99) for _ in range(len(traits)*3)]
+        defaults = []
+        for i, trait in enumerate(traits):
+            p_i = 3*i
+            defaults.append({
+                'trait': trait,
+                'avg_percent': random_percents[p_i+2],
+                'you_percent': random_percents[p_i+1] if order else random_percents[p_i],
+                'partner_percent': random_percents[p_i] if order else random_percents[p_i+1],
+            })
+
+        return defaults
     
 
 class Category(models.Model):
