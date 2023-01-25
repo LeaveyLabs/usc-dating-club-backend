@@ -140,8 +140,8 @@ class Match(models.Model):
     
     def send_accept_match_notifications(self) -> None:
         """ Notifies users that their match was accepted """
-        payload1 = self.accept_match_payload(self.user2, self.user1)
-        payload2 = self.accept_match_payload(self.user1, self.user2)
+        payload1 = self.initial_match_payload(self.user2, self.user1)
+        payload2 = self.initial_match_payload(self.user1, self.user2)
         
         Notification.objects.bulk_create([
           Notification(
