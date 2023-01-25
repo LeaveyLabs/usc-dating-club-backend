@@ -116,20 +116,22 @@ class Match(models.Model):
     
     def send_initial_match_notifications(self) -> None:
         """ Notifies users that they've been matched """
-        seed = random.randint(0, 1000)
+        payload1 = self.initial_match_payload(self.user2, self.user1)
+        payload2 = self.flip_match_payload(payload1)
+
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user1.first_name, self.user2.first_name),
-            data=self.initial_match_payload(self.user2, self.user1, seed),
+            data=payload1,
             sound=self.MATCH_SOUND,
           ),
           Notification(
             user=self.user2,
             type=Notification.Choices.MATCH,
             message=self.match_message(self.user2.first_name, self.user1.first_name),
-            data=self.initial_match_payload(self.user1, self.user2, seed),
+            data=payload2,
             sound=self.MATCH_SOUND,
           ),
         ])
@@ -155,7 +157,7 @@ class Match(models.Model):
     def match_message(self, receiver_name, sender_name) -> str:
         return f'{receiver_name}, you matched with {sender_name}!'
 
-    def flip_match_payload(self, payload):
+    def flip_match_payload(self, payload) -> dict:
         payload_copy = dict(payload)
         numerical_similarities = payload_copy.get('numerical_similarities')
         for i, similarity in enumerate(numerical_similarities):
@@ -165,7 +167,7 @@ class Match(models.Model):
             payload_copy['numerical_similarities'][i]['partner_percent'] = you
         return payload_copy
 
-    def initial_match_payload(self, partner, user, seed=0) -> dict:
+    def initial_match_payload(self, partner, user) -> dict:
         try:
             user.numerical_responses
             user.text_responses
@@ -205,8 +207,6 @@ class Match(models.Model):
 
         serialized_numerical_similarities = []
         serialized_text_similarities = []
-
-        random.seed(seed)
 
         for response in similar_numerical_responses.all():
             category = response.question.base_question.category
@@ -288,13 +288,14 @@ class Match(models.Model):
 
     def default_numerical_similarities(self):
         traits = ['open-minded', 'intentional', 'empathetic']
-        random_percents = [random.randint(85, 99) for _ in range(len(traits)*3)]
+        random_percents = [random.randint(85, 99) for _ in range(len(traits)*2)]
+        random_averages = [random.randint(35, 65) for _ in range(len(traits))]
         defaults = []
         for i, trait in enumerate(traits):
-            p_i = 3*i
+            p_i = 2*i
             defaults.append({
                 'trait': trait,
-                'avg_percent': random_percents[p_i+2],
+                'avg_percent': random_averages[i],
                 'you_percent': random_percents[p_i+1],
                 'partner_percent': random_percents[p_i],
             })
