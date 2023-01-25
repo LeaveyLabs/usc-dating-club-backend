@@ -675,8 +675,8 @@ class MatchNotificationTest(TestCase):
 
     def test_flip_initial_match_payload_returns_identical_average_compatibilities(self):
         match = Match.objects.create(user1=self.user1, user2=self.user2)
-        payload1 = match.initial_match_payload(self.user1, self.user2)
-        payload2 = match.flip_match_payload(payload1)
+        payload1 = match.initial_match_payload(self.user2, self.user1)
+        payload2 = match.flip_match_payload(self.user1, payload1)
 
         for similarity1, similarity2 in zip(
           payload1.get('numerical_similarities'),
