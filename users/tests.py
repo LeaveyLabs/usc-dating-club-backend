@@ -580,6 +580,10 @@ class UpdateMatchAcceptanceTest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Match.objects.get(user1_id=self.user1.id).user1_accepted)
+        self.assertTrue(
+          Notification.objects.filter(user_id=self.user1.id).exists()&
+          Notification.objects.filter(user_id=self.user2.id).exists()
+        )
 
 
 class ForceCreateMatchTest(TestCase):

@@ -432,11 +432,20 @@ class Notification(models.Model):
     sound = models.TextField(null=True)
 
     def send_to_device(self) -> None:
-        APNSDevice.objects.filter(user=self.user).send_message(
-            message=self.message,
-            sound=self.sound,
-            extra={
-                "type": self.type,
-                "data": self.data,
-            }
-        )
+        applicable_devices = APNSDevice.objects.filter(user=self.user)
+        if self.message:
+            applicable_devices.send_message(
+                message=self.message,
+                sound=self.sound,
+                extra={
+                    "type": self.type,
+                    "data": self.data,
+                }
+            )
+        else:
+            applicable_devices.send_message(
+                extra={
+                    "type": self.type,
+                    "data": self.data,
+                }
+            )
