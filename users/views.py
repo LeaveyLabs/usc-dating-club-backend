@@ -677,16 +677,20 @@ class AcceptMatch(UpdateAPIView):
         user_id = update_request.data.get('user_id')
         partner_id = update_request.data.get('partner_id')
 
-        user1_id, user2_id = sorted([user_id, partner_id])
-        matches = Match.objects.filter(
-          user1_id=user1_id,
-          user2_id=user2_id,
+        # user1_id, user2_id = sorted([user_id, partner_id])
+        user_first = Match.objects.filter(
+          user1_id=user_id,
+          user2_id=partner_id,
+        )
+        user_second = Match.objects.filter(
+          user1_id=partner_id,
+          user2_id=user_id,
         )
         
-        if user_id == user1_id:
-            matches.update(user1_accepted=True)
-        else:
-            matches.update(user2_accepted=True)
+        if user_first.exists():
+            user_first.update(user1_accepted=True)
+        elif user_second.exists():
+            user_second.update(user2_accepted=True)
 
         return Response(
           update_request.data,
