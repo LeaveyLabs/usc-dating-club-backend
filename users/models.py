@@ -117,7 +117,7 @@ class Match(models.Model):
     def send_initial_match_notifications(self) -> None:
         """ Notifies users that they've been matched """
         payload1 = self.initial_match_payload(self.user2, self.user1)
-        payload2 = self.flip_match_payload(self.user2, payload1)
+        payload2 = self.flip_match_payload(self.user1, payload1)
 
         Notification.objects.bulk_create([
           Notification(
