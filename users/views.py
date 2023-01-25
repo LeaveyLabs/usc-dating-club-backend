@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
-from users.models import EmailAuthentication, Match, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User, WaitingEmail
+from users.models import EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User, WaitingEmail
 
 import sys
 sys.path.append(".")
@@ -730,5 +730,37 @@ class ForceCreateMatch(CreateAPIView):
 
         return Response(
           match_request.data,
+          status.HTTP_201_CREATED,
+        )
+
+# Stop Location Sharing
+class StopLocationSharingSerializer(Serializer):
+    user1_id = IntegerField()
+    user2_id = IntegerField()
+
+class StopLocationSharing(CreateAPIView):
+    serializer_class = StopLocationSharingSerializer
+    def create(self, request, *args, **kwargs):
+        stop_location_request = StopLocationSharingSerializer(data=request.data)
+        stop_location_request.is_valid(raise_exception=True)
+
+        user1_id = stop_location_request.data.get('user1_id')
+        user2_id = stop_location_request.data.get('user2_id')
+
+        Notification.objects.bulk_create([
+          Notification(
+            user_id=user1_id,
+            type=Notification.Choices.STOP_SHARE,
+            message=None,
+          ),
+          Notification(
+            user_id=user2_id,
+            type=Notification.Choices.STOP_SHARE,
+            message=None,
+          ),
+        ])
+
+        return Response(
+          stop_location_request.data,
           status.HTTP_201_CREATED,
         )

@@ -423,17 +423,19 @@ class Notification(models.Model):
     class Choices:
         MATCH = "match"
         ACCEPT = "accept"
+        STOP_SHARE = "stop"
     
     NOTIFICATION_OPTIONS = (
         (Choices.MATCH, Choices.MATCH),
         (Choices.ACCEPT, Choices.ACCEPT),
+        (Choices.STOP_SHARE, Choices.STOP_SHARE),
     )
 
     objects = NotificationManager()
 
     user = models.ForeignKey(User, related_name="notifications", on_delete=models.CASCADE)
     type = models.CharField(max_length=15, choices=NOTIFICATION_OPTIONS,)
-    message = models.TextField(default='')
+    message = models.TextField(null=True, blank=True)
     data = models.JSONField(null=True, blank=True)
     time = models.DateTimeField(default=timezone.now)
     sound = models.TextField(null=True)

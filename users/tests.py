@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
 from users.models import Category, EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
-from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, StopLocationSharing, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 sys.path.append(".")
@@ -689,3 +689,32 @@ class MatchNotificationTest(TestCase):
 
         self.assertEqual(payload1.get('text_similarities'), payload2.get('text_similarities'))
 
+
+class StopLocationSharingTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1, 'f', 'm')
+        self.user2 = random_user(2, 'm', 'f')
+        
+        self.user1.save()
+        self.user2.save()
+
+        Match.objects.create(user1=self.user1, user2=self.user2)
+
+    def test_basic_stop_location_sharing_sends_notification(self):
+        request = APIRequestFactory().post(
+          path='stop-location-sharing/',
+          data={
+            'user1_id': self.user1.id,
+            'user2_id': self.user2.id,
+          }
+        )
+
+        response = StopLocationSharing.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Notification.objects.filter(
+            type=Notification.Choices.STOP_SHARE,
+            user_id=self.user1.id).exists())
+        self.assertTrue(Notification.objects.filter(
+            type=Notification.Choices.STOP_SHARE,
+            user_id=self.user2.id).exists())
