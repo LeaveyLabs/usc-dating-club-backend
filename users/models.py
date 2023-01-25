@@ -453,3 +453,10 @@ class Message(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
     body = models.TextField()
     timestamp = models.DateTimeField(default=timezone.now)
+
+    def save(self, *args, **kwargs) -> None:
+        Message.objects.filter(
+            (Q(sender=self.sender)|Q(receiver=self.sender))&
+            Q(timestamp__lte=timezone.now()-timedelta(minutes=10))
+        ).delete()
+        super().save(*args, **kwargs)
