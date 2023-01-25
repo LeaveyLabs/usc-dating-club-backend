@@ -1,5 +1,5 @@
 """ Defines database models for Users """
-import math
+import copy
 import os
 import random
 from uuid import uuid4
@@ -164,13 +164,13 @@ class Match(models.Model):
         return f'{sender_name} is down to meet up. you have 5 minutes to go and say hi'
 
     def flip_match_payload(self, partner, payload) -> dict:
-        payload_copy = dict(payload)
+        payload_copy = copy.deepcopy(payload)
 
         payload_copy['id'] = partner.id
         payload_copy['first_name'] = partner.first_name
         payload_copy['email'] = partner.email
 
-        numerical_similarities = payload_copy.get('numerical_similarities')
+        numerical_similarities = payload.get('numerical_similarities')
         for i, similarity in enumerate(numerical_similarities):
             you = similarity.get('you_percent')
             partner = similarity.get('partner_percent')
