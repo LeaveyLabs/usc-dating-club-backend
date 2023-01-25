@@ -146,12 +146,12 @@ class Match(models.Model):
         Notification.objects.bulk_create([
           Notification(
             user=self.user1,
-            message=self.accept_message(self.user1.first_name, self.user2.first_name),
+            message=self.accept_message(self.user2.first_name),
             data=payload1,
           ),
           Notification(
             user=self.user2,
-            message=self.accept_message(self.user2.first_name, self.user1.first_name),
+            message=self.accept_message(self.user1.first_name),
             type=Notification.Choices.ACCEPT,
             data=payload2,
           ),
