@@ -11,6 +11,8 @@ from users.models import Category, EmailAuthentication, Match, Notification, Num
 from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, StopLocationSharing, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
+
+from users.viewsets import QuestionViewset
 sys.path.append(".")
 from twilio_config import TwilioTestClientMessages
 
@@ -718,3 +720,33 @@ class StopLocationSharingTest(TestCase):
         self.assertTrue(Notification.objects.filter(
             type=Notification.Choices.STOP_SHARE,
             user_id=self.user2.id).exists())
+
+class QuestionViewsetTest(TestCase):
+    def setUp(self):
+        Category.objects.create(id=1, trait1='hi', trait2='hi')
+
+        BaseQuestion.objects.create(id=1, category_id=1)
+        BaseQuestion.objects.create(id=2, category_id=1)
+        BaseQuestion.objects.create(id=3, category_id=1)
+        BaseQuestion.objects.create(id=4, category_id=1)
+        BaseQuestion.objects.create(id=5, category_id=1)
+        BaseQuestion.objects.create(id=6, category_id=1)        
+
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalQuestion.objects.create(id=2, base_question_id=5)
+        NumericalQuestion.objects.create(id=3, base_question_id=6)
+
+        TextQuestion.objects.create(id=1, base_question_id=2)
+        TextQuestion.objects.create(id=2, base_question_id=3)
+        TextQuestion.objects.create(id=3, base_question_id=4)
+
+    def test_get_returns_text_questions_last(self):
+        request = APIRequestFactory().get(
+          path='questions/'
+        )
+        response = QuestionViewset.as_view({"get":"list"})(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data)
+        self.assertTrue(response.data[0]['is_numerical'])
+        self.assertFalse(response.data[-1]['is_numerical'])

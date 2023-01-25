@@ -164,6 +164,18 @@ class QuestionViewset(viewsets.ModelViewSet):
     permission_class = [AllowAny, ]
     queryset = BaseQuestion.objects.all()
 
+    def list(self, *args, **kwargs):
+        response = super().list(*args, **kwargs)
+        numerical_questions = []
+        text_questions = []
+        for question in response.data:
+            if question.get('is_numerical'):
+                numerical_questions.append(question)
+            else:
+                text_questions.append(question)
+        response.data = numerical_questions + text_questions
+        return response
+
 class TextQuestionViewset(viewsets.ModelViewSet):
     """
     A viewset for viewing and editing question instances.
@@ -209,4 +221,3 @@ class MessageViewset(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_class = [AllowAny, ]
     queryset = Message.objects.all()
-    
