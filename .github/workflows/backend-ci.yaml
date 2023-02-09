@@ -22,7 +22,7 @@ jobs:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: postgres
         SECRET_KEY: ${{secrets.SECRET_KEY}}
-        LOCATION_KEY: keykeykeykeykeyk
+        LOCATION_KEY: BFWKfEJ-E-jT6ZLh2KnWB5gCiucUHuvXAIABh8ZdZzM=
         
     services:
       postgres:
