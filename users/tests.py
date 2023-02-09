@@ -1,5 +1,8 @@
 """ Tests for User APIs """
+import os
 import random
+
+from cryptography.fernet import Fernet
 from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
@@ -412,6 +415,51 @@ class UpdateLocationTest(TestCase):
         )
         self.assertFalse(Notification.objects.filter(user=self.user1))
         self.assertFalse(Notification.objects.filter(user=self.user2))
+
+    def test_encrypted_location_update_near_compatible_user_matches_user(self):
+        """" 
+        Both people are:
+        - in the same location
+        - opposite sex preferences
+        - similar compatibility.
+        """
+
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
+
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
+
+        f = Fernet(str.encode(os.environ['LOCATION_KEY']))
+        a = f.encrypt(str.encode(str(0)))
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': a.decode(),
+            'longitude': a.decode(),
+            'is_encrypted': True,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertTrue(Notification.objects.filter(user=self.user1))
+        self.assertTrue(Notification.objects.filter(user=self.user2))
+
 
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):

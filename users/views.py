@@ -442,6 +442,9 @@ class NearbyUserSerializer(ModelSerializer):
 class UpdateLocationSerializer(ModelSerializer):
     """" UpdateLocation parameters """
     email = EmailField()
+    latitude = CharField()
+    longitude = CharField()
+    is_encrypted = BooleanField(default=False)
 
     class Meta:
         """ JSON fields from User """
@@ -450,6 +453,7 @@ class UpdateLocationSerializer(ModelSerializer):
           'email',
           'latitude',
           'longitude',
+          'is_encrypted',
         )
 
 class UpdateLocation(UpdateAPIView):
@@ -458,6 +462,11 @@ class UpdateLocation(UpdateAPIView):
     serializer_class = UpdateLocationSerializer
     permission_class = [AllowAny, ]
 
+    def decrypt(self, coordinate):
+        from cryptography.fernet import Fernet
+        f = Fernet(str.encode(os.environ['LOCATION_KEY']))
+        return float(f.decrypt(str.encode(coordinate)))
+
     def update(self, request, *args, **kwargs):
         location_request = UpdateLocationSerializer(data=request.data)
         location_request.is_valid(raise_exception=True)
@@ -465,6 +474,14 @@ class UpdateLocation(UpdateAPIView):
         email = location_request.data.get('email')
         latitude = location_request.data.get('latitude')
         longitude = location_request.data.get('longitude')
+        is_encrypted = location_request.data.get('is_encrypted')
+
+        if is_encrypted:
+            latitude = self.decrypt(latitude)
+            longitude = self.decrypt(longitude)
+        else:
+            latitude = float(latitude)
+            longitude = float(longitude)
 
         updated_users = User.objects.filter(email=email)\
           .prefetch_related('numerical_responses', 'text_responses')
