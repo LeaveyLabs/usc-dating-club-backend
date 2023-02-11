@@ -96,24 +96,26 @@ class Match(models.Model):
         """ Two users cannot match more than once """
         unique_together = ('user1', 'user2', )
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, setting_notification=False, *args, **kwargs) -> None:
         """ Order the users and notify each of them """
         super().save(*args, **kwargs)
+
+        if setting_notification: return
 
         self.user1, self.user2 = sorted([self.user1, self.user2], key=lambda user: user.email)
 
         if not self.initial_notification_sent:
             self.send_initial_match_notifications()
             self.initial_notification_sent = True
+            self.save(setting_notification=True)
 
         if (not self.accept_notification_sent
             and self.user1_accepted
             and self.user2_accepted):
             self.send_accept_match_notifications()
             self.accept_notification_sent = True
+            self.save(setting_notification=True)
 
-        super().save(*args, **kwargs)
-    
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
 
