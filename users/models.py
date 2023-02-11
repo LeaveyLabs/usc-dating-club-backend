@@ -117,6 +117,7 @@ class Match(models.Model):
 
     def send_match_create_to_mixpanel(self, payload1, payload2, compatibility) -> None:
         MixpanelClient.track(self.user1.id, 'Match Create', {
+            'match_id': self.id,
             'numerical_traits': [
                 similarity['trait'] 
                 for similarity in payload1['numerical_similarities']
@@ -132,6 +133,7 @@ class Match(models.Model):
         })
         
         MixpanelClient.track(self.user2.id, 'Match Create', {
+            'match_id': self.id,
             'numerical_traits': [
                 similarity['trait'] 
                 for similarity in payload1['numerical_similarities']
