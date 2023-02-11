@@ -111,6 +111,8 @@ class Match(models.Model):
             and self.user2_accepted):
             self.send_accept_match_notifications()
             self.accept_notification_sent = True
+
+        super().save(*args, **kwargs)
     
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
