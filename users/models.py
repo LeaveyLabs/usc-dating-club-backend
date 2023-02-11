@@ -309,6 +309,7 @@ class Match(models.Model):
             )
 
         return {
+            'match_id': self.id,
             'id': partner.id,
             'first_name': partner.first_name,
             'email': partner.email,
@@ -327,6 +328,7 @@ class Match(models.Model):
 
     def accept_match_payload(self, user, partner) -> dict:
         return {
+            'match_id': self.id,
             'id': partner.id,
             'first_name': partner.first_name,
             'email': partner.email,
