@@ -156,7 +156,6 @@ class Match(models.Model):
         """ Notifies users that they've been matched """
         payload1 = self.initial_match_payload(self.user2, self.user1)
         payload2 = self.flip_match_payload(self.user1, payload1)
-        print(payload1)
 
         compatibility = payload1['compatibility']
 
