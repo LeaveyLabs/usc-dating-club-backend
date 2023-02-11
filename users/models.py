@@ -98,8 +98,9 @@ class Match(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         """ Order the users and notify each of them """
-        super().save(*args, **kwargs)
-
+        if not self.id:
+            super().save(*args, **kwargs)
+        
         self.user1, self.user2 = sorted([self.user1, self.user2], key=lambda user: user.email)
 
         if not self.initial_notification_sent:
@@ -111,6 +112,7 @@ class Match(models.Model):
             and self.user2_accepted):
             self.send_accept_match_notifications()
             self.accept_notification_sent = True
+
     
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
