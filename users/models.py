@@ -98,9 +98,8 @@ class Match(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         """ Order the users and notify each of them """
-        if not self.id:
-            super().save(*args, **kwargs)
-        
+        super().save(*args, **kwargs)
+
         self.user1, self.user2 = sorted([self.user1, self.user2], key=lambda user: user.email)
 
         if not self.initial_notification_sent:
@@ -112,7 +111,6 @@ class Match(models.Model):
             and self.user2_accepted):
             self.send_accept_match_notifications()
             self.accept_notification_sent = True
-
     
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
@@ -272,11 +270,13 @@ class Match(models.Model):
             below_average = response.answer < response.question.average
             trait = category.trait1 if below_average else category.trait2
 
+            you_percent = random.randint(85, 99)
+
             serialized_numerical_similarities.append({
                 'trait': trait,
                 'avg_percent': random.randint(35, 65),
-                'you_percent': random.randint(85, 99),
-                'partner_percent': random.randint(85, 99),
+                'you_percent': you_percent,
+                'partner_percent': you_percent + random.randint(-5, 5),
             })
 
         for response in similar_text_responses.all():
