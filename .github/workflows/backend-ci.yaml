@@ -23,6 +23,7 @@ jobs:
         POSTGRES_PASSWORD: postgres
         SECRET_KEY: ${{secrets.SECRET_KEY}}
         LOCATION_KEY: 6178
+        MIXPANEL_TOKEN: randomtoken
         
     services:
       postgres:

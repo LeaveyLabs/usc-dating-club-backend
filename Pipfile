@@ -16,6 +16,7 @@ gunicorn = "*"
 dj-database-url = "*"
 psycopg2 = "*"
 django-heroku = "*"
+mixpanel = "*"
 
 [dev-packages]
 

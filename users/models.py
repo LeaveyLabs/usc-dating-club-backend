@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
+from mp_config import MixpanelClient
 from math import radians, cos, sin, asin, sqrt
 from phonenumber_field.modelfields import PhoneNumberField
 from push_notifications.models import APNSDevice
@@ -113,6 +114,41 @@ class Match(models.Model):
     
     def has_expired(self) -> bool:
         return (timezone.now() - self.time) > timedelta(days=2)
+
+    def send_match_create_to_mixpanel(self, payload1, payload2, compatibility) -> None:
+        MixpanelClient.track(self.user1.id, 'Match Create', {
+            'numerical_traits': [
+                similarity['trait'] 
+                for similarity in payload1['numerical_similarities']
+            ],
+            'text_traits': [
+                similarity['trait'] 
+                for similarity in payload1['text_similarities']
+            ],
+            'compatibility': compatibility,
+            'latitude': payload1['latitude'],
+            'longitude': payload1['longitude'],
+            'distance': payload1['distance'],
+        })
+        
+        MixpanelClient.track(self.user2.id, 'Match Create', {
+            'numerical_traits': [
+                similarity['trait'] 
+                for similarity in payload1['numerical_similarities']
+            ],
+            'text_traits': [
+                similarity['trait'] 
+                for similarity in payload1['text_similarities']
+            ],
+            'compatibility': compatibility,
+            'latitude': payload2['latitude'],
+            'longitude': payload2['longitude'],
+            'distance': payload1['distance'],
+        })
+
+    def send_match_accept_to_mixpanel(self) -> None:
+        MixpanelClient.track(self.user1.id, 'Match Success')
+        MixpanelClient.track(self.user2.id, 'Match Success')
     
     def send_initial_match_notifications(self) -> None:
         """ Notifies users that they've been matched """
@@ -137,6 +173,8 @@ class Match(models.Model):
             sound=self.MATCH_SOUND,
           ),
         ])
+
+        self.send_match_create_to_mixpanel(payload1, payload2, compatibility)
     
     def send_accept_match_notifications(self) -> None:
         """ Notifies users that their match was accepted """
@@ -157,6 +195,8 @@ class Match(models.Model):
             data=payload2,
           ),
         ])
+
+        self.send_match_accept_to_mixpanel()
 
     def match_message(self, sender_name, comptability) -> str:
         return f'{sender_name} is nearby and {comptability}% compatible with you. you have 5 minutes to respond'
@@ -380,6 +420,10 @@ class NumericalResponse(models.Model):
     answer = models.FloatField()
 
     def save(self, *args, **kwargs):
+        NumericalResponse.objects.filter(
+            question=self.question,
+            user=self.user,
+        ).delete()
         super().save(*args, **kwargs)
         # self.question.calculate_average()
         # self.question.save()
@@ -388,6 +432,13 @@ class TextResponse(models.Model):
     question = models.ForeignKey(TextQuestion, related_name="text_responses", on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name="text_responses", on_delete=models.CASCADE)
     answer = models.TextField()
+
+    def save(self, *args, **kwargs):
+        TextResponse.objects.filter(
+            question=self.question,
+            user=self.user,
+        ).delete()
+        super().save(*args, **kwargs)
 
 class EmailAuthentication(models.Model):
     """ Authenticate email with verification code """
