@@ -438,15 +438,12 @@ class UpdateLocationTest(TestCase):
         TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
         TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
 
-        f = Fernet(str.encode(os.environ['LOCATION_KEY']))
-        a = f.encrypt(str.encode(str(0)))
-
         request = APIRequestFactory().put(
           path='update-location/',
           data={
             'email': self.user2.email,
-            'latitude': a.decode(),
-            'longitude': a.decode(),
+            'latitude': 0 + float(os.environ['LOCATION_KEY']),
+            'longitude': 0 + float(os.environ['LOCATION_KEY']),
             'is_encrypted': True,
           }
         )

@@ -442,8 +442,6 @@ class NearbyUserSerializer(ModelSerializer):
 class UpdateLocationSerializer(ModelSerializer):
     """" UpdateLocation parameters """
     email = EmailField()
-    latitude = CharField()
-    longitude = CharField()
     is_encrypted = BooleanField(default=False)
 
     class Meta:
@@ -463,9 +461,7 @@ class UpdateLocation(UpdateAPIView):
     permission_class = [AllowAny, ]
 
     def decrypt(self, coordinate):
-        from cryptography.fernet import Fernet
-        f = Fernet(str.encode(os.environ['LOCATION_KEY']))
-        return float(f.decrypt(str.encode(coordinate)))
+        return coordinate - float(os.environ['LOCATION_KEY'])
 
     def update(self, request, *args, **kwargs):
         location_request = UpdateLocationSerializer(data=request.data)
