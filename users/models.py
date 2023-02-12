@@ -326,14 +326,12 @@ class Match(models.Model):
             # serialized_numerical_similarities += defaults[:num_needed_defaults]
         
         serialized_numerical_similarities = random.sample(
-            serialized_numerical_similarities,
-            n=3,
+            serialized_numerical_similarities, k=3,
         )
 
         if len(serialized_text_similarities) > 3:
             serialized_text_similarities = random.sample(
-                serialized_text_similarities,
-                n=3,
+                serialized_text_similarities, k=3,
             )
 
         return {
