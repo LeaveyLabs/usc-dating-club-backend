@@ -267,26 +267,40 @@ class Match(models.Model):
         serialized_numerical_similarities = []
         serialized_text_similarities = []
 
+        similar_traits = set()
+
         for response in similar_numerical_responses.all():
             category = response.question.base_question.category
             if not category: continue
             if not category.trait1 or not category.trait2: continue
+
             below_average = response.answer < response.question.average
             trait = category.trait1 if below_average else category.trait2
 
+            if trait in similar_traits: continue
+            similar_traits.add(trait)
+
             you_percent = random.randint(85, 99)
+            partner_percent = random.randint(85, 99)
+            if partner_percent == you_percent:
+                partner_percent += 2
 
             serialized_numerical_similarities.append({
                 'trait': trait,
                 'avg_percent': random.randint(35, 65),
                 'you_percent': you_percent,
-                'partner_percent': you_percent + random.randint(-5, 5),
+                'partner_percent': partner_percent,
             })
 
         for response in similar_text_responses.all():
             category = response.question.base_question.category
+
             if not category: continue
             trait = response.question.base_question.category.trait1
+
+            if trait in similar_traits: continue
+            similar_traits.add(trait)
+
             answer_choices = TextAnswerChoice.objects.filter(
                 question_id=response.question.id,
                 answer=response.answer,

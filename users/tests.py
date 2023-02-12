@@ -675,22 +675,27 @@ class MatchNotificationTest(TestCase):
 
 
     def initialize_questions(self):
-        Category.objects.create(id=1, trait1='hi', trait2='hi')
+        Category.objects.create(id=1, trait1='hi1', trait2='hi1')
+        Category.objects.create(id=2, trait1='hi2', trait2='hi2')
+        Category.objects.create(id=3, trait1='hi3', trait2='hi3')
+        Category.objects.create(id=4, trait1='hi4', trait2='hi4')
+        Category.objects.create(id=5, trait1='hi5', trait2='hi5')
+        Category.objects.create(id=6, trait1='hi6', trait2='hi6')
 
         BaseQuestion.objects.create(id=1, category_id=1)
-        BaseQuestion.objects.create(id=2, category_id=1)
-        BaseQuestion.objects.create(id=3, category_id=1)
-        BaseQuestion.objects.create(id=4, category_id=1)
-        BaseQuestion.objects.create(id=5, category_id=1)
-        BaseQuestion.objects.create(id=6, category_id=1)        
+        BaseQuestion.objects.create(id=2, category_id=2)
+        BaseQuestion.objects.create(id=3, category_id=3)
+        BaseQuestion.objects.create(id=4, category_id=4)
+        BaseQuestion.objects.create(id=5, category_id=5)
+        BaseQuestion.objects.create(id=6, category_id=6)        
 
         NumericalQuestion.objects.create(id=1, base_question_id=1)
         NumericalQuestion.objects.create(id=2, base_question_id=2)
         NumericalQuestion.objects.create(id=3, base_question_id=3)
 
-        TextQuestion.objects.create(id=1, base_question_id=3)
-        TextQuestion.objects.create(id=2, base_question_id=4)
-        TextQuestion.objects.create(id=3, base_question_id=5)
+        TextQuestion.objects.create(id=1, base_question_id=4)
+        TextQuestion.objects.create(id=2, base_question_id=5)
+        TextQuestion.objects.create(id=3, base_question_id=6)
 
     def initialize_identical_responses(self):
         NumericalResponse.objects.create(user=self.user1, question_id=1, answer=1)
@@ -768,14 +773,19 @@ class StopLocationSharingTest(TestCase):
 
 class QuestionViewsetTest(TestCase):
     def setUp(self):
-        Category.objects.create(id=1, trait1='hi', trait2='hi')
+        Category.objects.create(id=1, trait1='hi1', trait2='hi1')
+        Category.objects.create(id=2, trait1='hi2', trait2='hi2')
+        Category.objects.create(id=3, trait1='hi3', trait2='hi3')
+        Category.objects.create(id=4, trait1='hi4', trait2='hi4')
+        Category.objects.create(id=5, trait1='hi5', trait2='hi5')
+        Category.objects.create(id=6, trait1='hi6', trait2='hi6')
 
         BaseQuestion.objects.create(id=1, category_id=1)
-        BaseQuestion.objects.create(id=2, category_id=1)
-        BaseQuestion.objects.create(id=3, category_id=1)
-        BaseQuestion.objects.create(id=4, category_id=1)
-        BaseQuestion.objects.create(id=5, category_id=1)
-        BaseQuestion.objects.create(id=6, category_id=1)        
+        BaseQuestion.objects.create(id=2, category_id=2)
+        BaseQuestion.objects.create(id=3, category_id=3)
+        BaseQuestion.objects.create(id=4, category_id=4)
+        BaseQuestion.objects.create(id=5, category_id=5)
+        BaseQuestion.objects.create(id=6, category_id=6)        
 
         NumericalQuestion.objects.create(id=1, base_question_id=1)
         NumericalQuestion.objects.create(id=2, base_question_id=5)
