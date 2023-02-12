@@ -1,4 +1,5 @@
 """ Defines REST viewsets for all models """
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
@@ -221,3 +222,18 @@ class MessageViewset(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_class = [AllowAny, ]
     queryset = Message.objects.all()
+
+    def get_queryset(self, *args, **kwargs):
+        user1_id = self.request.query_params.get('user1_id')
+        user2_id = self.request.query_params.get('user2_id')
+
+        return Message.objects.filter(
+            (
+                Q(sender=user1_id)&
+                Q(receiver=user2_id)
+            ) | (
+                Q(receiver=user1_id)&
+                Q(sender=user2_id)
+            )  
+        )
+        

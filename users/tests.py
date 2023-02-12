@@ -10,12 +10,12 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from uuid import uuid4
 
-from users.models import Category, EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User
+from users.models import Category, EmailAuthentication, Match, Notification, NumericalQuestion, NumericalResponse, PhoneAuthentication, BaseQuestion, TextQuestion, TextResponse, User, Message
 from users.views import CompleteUserSerializer, DeleteAccount, ForceCreateMatch, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, StopLocationSharing, UpdateLocation, AcceptMatch, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 
 import sys
 
-from users.viewsets import QuestionViewset
+from users.viewsets import MessageViewset, QuestionViewset
 sys.path.append(".")
 from twilio_config import TwilioTestClientMessages
 
@@ -805,3 +805,32 @@ class QuestionViewsetTest(TestCase):
         self.assertTrue(response.data)
         self.assertTrue(response.data[0]['is_numerical'])
         self.assertFalse(response.data[-1]['is_numerical'])
+
+class MessageViewsetTest(TestCase):
+    def setUp(self):
+        self.user1 = random_user(1)
+        self.user2 = random_user(2)
+
+        self.user1.save()
+        self.user2.save()
+
+        Message.objects.create(
+          sender=self.user1,
+          receiver=self.user2,
+          body='message1'
+        )
+        Message.objects.create(
+          sender=self.user2,
+          receiver=self.user1,
+          body='message2'
+        )
+    
+    def test_get_messages_with_user1_and_user2_returns_two_messages(self):
+        request = APIRequestFactory().get(
+          path=f'messages/?user1_id={self.user1.id}&user2_id={self.user2.id}'
+        )
+        response = MessageViewset.as_view({"get": "list"})(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data), 2)
+
