@@ -114,7 +114,13 @@ class TextResponseSerializer(ModelSerializer):
 class MessageSerializer(ModelSerializer):
     class Meta:
         model = Message
-        fields = '__all__'
+        fields = (
+            'id',
+            'sender_id',
+            'receiver_id',
+            'body',
+            'timestamp',
+        )
 
 
 """ Viewsets """
