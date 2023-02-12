@@ -2,7 +2,7 @@
 from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, FloatField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, IntegerField
 from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail, Message
 
 
@@ -112,15 +112,18 @@ class TextResponseSerializer(ModelSerializer):
         fields = '__all__'
 
 class MessageSerializer(ModelSerializer):
+    sender_id = SerializerMethodField()
+    receiver_id = SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = (
-            'id',
-            'sender_id',
-            'receiver_id',
-            'body',
-            'timestamp',
-        )
+        fields = '__all__'
+
+    def get_sender_id(self, obj):
+        return obj.sender.id
+    
+    def get_receiver_id(self, obj):
+        return obj.receiver.id
 
 
 """ Viewsets """
