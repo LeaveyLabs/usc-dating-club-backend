@@ -311,9 +311,6 @@ class Match(models.Model):
                 'shared_response': response.answer,
                 'emoji': emoji,
             })
-        
-        print(serialized_numerical_similarities, serialized_text_similarities)
-
 
         serialized_numerical_similarities = self.prune_identical_similarities(
             serialized_numerical_similarities
@@ -328,15 +325,15 @@ class Match(models.Model):
             # defaults = self.default_numerical_similarities()
             # serialized_numerical_similarities += defaults[:num_needed_defaults]
         
-        serialized_numerical_similarities = random.choices(
+        serialized_numerical_similarities = random.sample(
             serialized_numerical_similarities,
-            k=3,
+            n=3,
         )
 
         if len(serialized_text_similarities) > 3:
-            serialized_text_similarities = random.choices(
+            serialized_text_similarities = random.sample(
                 serialized_text_similarities,
-                k=3,
+                n=3,
             )
 
         return {
