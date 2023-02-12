@@ -554,6 +554,6 @@ class Message(models.Model):
     def save(self, *args, **kwargs) -> None:
         Message.objects.filter(
             (Q(sender=self.sender)|Q(receiver=self.sender))&
-            Q(timestamp__lte=timezone.now()-timedelta(minutes=10))
+            Q(timestamp__lte=current_timestamp()-timedelta(minutes=10).total_seconds())
         ).delete()
         super().save(*args, **kwargs)

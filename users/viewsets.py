@@ -112,8 +112,6 @@ class TextResponseSerializer(ModelSerializer):
         fields = '__all__'
 
 class MessageSerializer(ModelSerializer):
-    timestamp = FloatField()
-
     class Meta:
         model = Message
         fields = '__all__'
