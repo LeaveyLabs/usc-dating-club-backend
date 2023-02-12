@@ -18,7 +18,7 @@ from django.urls import path
 from push_notifications.api.rest_framework import APNSDeviceAuthorizedViewSet
 from rest_framework import routers
 
-from users.views import AcceptMatch, DeleteAccount, ForceCreateMatch, GetPageOrder, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
+from users.views import AcceptMatch, DeleteAccount, ForceCreateMatch, GetPageOrder, PostSurveyAnswers, RegisterUser, SendEmailCode, SendPhoneCode, StopLocationSharing, UpdateLocation, UpdateMatchableStatus, VerifyEmailCode, VerifyPhoneCode
 from users.viewsets import BannedEmailViewset, MessageViewset, NumericalQuestionViewset, TextQuestionViewset, UserViewset, MatchViewset, QuestionViewset, NumericalResponseViewset, TextResponseViewset, WaitingEmailViewset
 
 router = routers.DefaultRouter()
@@ -48,7 +48,8 @@ urlpatterns = [
     path("update-matchable-status/", UpdateMatchableStatus.as_view()),
     path("accept-match/", AcceptMatch.as_view()),
     path("get-page-order/", GetPageOrder.as_view()),
-    path("force-create-match/", ForceCreateMatch.as_view())
+    path("force-create-match/", ForceCreateMatch.as_view()),
+    path("stop-sharing-location/", StopLocationSharing.as_view())
 ]
 
 # Devices
