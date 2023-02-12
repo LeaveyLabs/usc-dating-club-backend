@@ -312,15 +312,22 @@ class Match(models.Model):
                 'emoji': emoji,
             })
 
+        serialized_numerical_similarities = self.prune_identical_similarities(
+            serialized_numerical_similarities
+        )
+        serialized_text_similarities = self.prune_identical_similarities(
+            serialized_text_similarities
+        )
+
         if len(serialized_numerical_similarities) < 3:
             num_needed_defaults = 3 - len(serialized_numerical_similarities)
             defaults = self.default_numerical_similarities()
             serialized_numerical_similarities += defaults[:num_needed_defaults]
-        else:
-            serialized_numerical_similarities = random.choices(
-                serialized_numerical_similarities,
-                k=3,
-            )
+        
+        serialized_numerical_similarities = random.choices(
+            serialized_numerical_similarities,
+            k=3,
+        )
 
         if len(serialized_text_similarities) > 3:
             serialized_text_similarities = random.choices(
@@ -362,6 +369,16 @@ class Match(models.Model):
             'latitude': partner.latitude,
             'longitude': partner.longitude,
         }
+
+    def prune_identical_similarities(self, similarities):
+        pruned_similarities = []
+        seen_traits = set()
+        for similarity in similarities:
+            if similarity.get('trait') in seen_traits:
+                continue
+            seen_traits.add(similarity.get('trait'))
+            pruned_similarities.append(similarity)
+        return pruned_similarities
 
     def default_numerical_similarities(self):
         traits = ['open-minded', 'intentional', 'empathetic']
