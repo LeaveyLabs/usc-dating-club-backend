@@ -320,9 +320,10 @@ class Match(models.Model):
         )
 
         if len(serialized_numerical_similarities) < 3:
-            num_needed_defaults = 3 - len(serialized_numerical_similarities)
-            defaults = self.default_numerical_similarities()
-            serialized_numerical_similarities += defaults[:num_needed_defaults]
+            serialized_numerical_similarities = self.default_numerical_similarities()
+            # num_needed_defaults = 3 - len(serialized_numerical_similarities)
+            # defaults = self.default_numerical_similarities()
+            # serialized_numerical_similarities += defaults[:num_needed_defaults]
         
         serialized_numerical_similarities = random.choices(
             serialized_numerical_similarities,
