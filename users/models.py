@@ -266,7 +266,6 @@ class Match(models.Model):
 
         serialized_numerical_similarities = []
         serialized_text_similarities = []
-        print(serialized_numerical_similarities, serialized_text_similarities)
 
         similar_traits = set()
 
@@ -312,6 +311,9 @@ class Match(models.Model):
                 'shared_response': response.answer,
                 'emoji': emoji,
             })
+        
+        print(serialized_numerical_similarities, serialized_text_similarities)
+
 
         serialized_numerical_similarities = self.prune_identical_similarities(
             serialized_numerical_similarities
