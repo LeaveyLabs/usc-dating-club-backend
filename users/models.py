@@ -4,7 +4,7 @@ import os
 import random
 from uuid import uuid4
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
@@ -25,6 +25,10 @@ def profile_picture_filepath(instance, filename) -> str:
 def random_code() -> str:
     """ Returns a six-digit random code """
     return "".join([str(random.randint(0, 9)) for _ in range(6)])
+
+def current_timestamp() -> float:
+    """ Returns the timestamp in the current timezone """
+    return timezone.now().timestamp()
 
 def haversine(lon1, lat1, lon2, lat2):
     """
@@ -545,7 +549,7 @@ class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_messages")
     body = models.TextField()
-    timestamp = models.DateTimeField(default=timezone.now)
+    timestamp = models.FloatField(default=current_timestamp)
 
     def save(self, *args, **kwargs) -> None:
         Message.objects.filter(

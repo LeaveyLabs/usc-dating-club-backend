@@ -2,7 +2,7 @@
 from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, FloatField
 from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail, Message
 
 
@@ -112,6 +112,8 @@ class TextResponseSerializer(ModelSerializer):
         fields = '__all__'
 
 class MessageSerializer(ModelSerializer):
+    timestamp = FloatField()
+
     class Meta:
         model = Message
         fields = '__all__'
