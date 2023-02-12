@@ -266,6 +266,7 @@ class Match(models.Model):
 
         serialized_numerical_similarities = []
         serialized_text_similarities = []
+        print(serialized_numerical_similarities, serialized_text_similarities)
 
         similar_traits = set()
 
