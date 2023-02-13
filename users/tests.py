@@ -756,8 +756,8 @@ class StopLocationSharingTest(TestCase):
         request = APIRequestFactory().post(
           path='stop-location-sharing/',
           data={
-            'user1_id': self.user1.id,
-            'user2_id': self.user2.id,
+            'user_id': self.user1.id,
+            'partner_id': self.user2.id,
           }
         )
 

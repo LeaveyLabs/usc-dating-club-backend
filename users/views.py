@@ -752,8 +752,8 @@ class ForceCreateMatch(CreateAPIView):
 
 # Stop Location Sharing
 class StopLocationSharingSerializer(Serializer):
-    user1_id = IntegerField()
-    user2_id = IntegerField()
+    user_id = IntegerField()
+    partner_id = IntegerField()
 
 class StopLocationSharing(CreateAPIView):
     serializer_class = StopLocationSharingSerializer
@@ -761,20 +761,20 @@ class StopLocationSharing(CreateAPIView):
         stop_location_request = StopLocationSharingSerializer(data=request.data)
         stop_location_request.is_valid(raise_exception=True)
 
-        user1_id = stop_location_request.data.get('user1_id')
-        user2_id = stop_location_request.data.get('user2_id')
+        user_id = stop_location_request.data.get('user_id')
+        partner_id = stop_location_request.data.get('partner_id')
 
         Notification.objects.bulk_create([
           Notification(
-            user_id=user1_id,
+            user_id=user_id,
             type=Notification.Choices.STOP_SHARE,
-            message="Your match has ended the connection",
+            message="Your connection has been ended",
             data={
               'time': timezone.now().timestamp(),
             },
           ),
           Notification(
-            user_id=user2_id,
+            user_id=partner_id,
             type=Notification.Choices.STOP_SHARE,
             message="Your match has ended the connection",
             data={
