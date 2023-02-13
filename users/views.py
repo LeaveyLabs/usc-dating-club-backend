@@ -764,7 +764,6 @@ class StopLocationSharing(CreateAPIView):
           Notification(
             user_id=user1_id,
             type=Notification.Choices.STOP_SHARE,
-            message=None,
             data={
               'time': timezone.now().timestamp(),
             },
@@ -772,7 +771,6 @@ class StopLocationSharing(CreateAPIView):
           Notification(
             user_id=user2_id,
             type=Notification.Choices.STOP_SHARE,
-            message=None,
             data={
               'time': timezone.now().timestamp(),
             },
