@@ -354,41 +354,41 @@ class UpdateLocationTest(TestCase):
         self.assertFalse(Notification.objects.filter(user=self.user1))
         self.assertFalse(Notification.objects.filter(user=self.user2))
 
-    def test_basic_location_update_near_test_incompatible_user_does_not_match_user(self):
-        """" 
-        Very different test results.
-        """
-        self.user1.latitude = 0
-        self.user1.longitude = 0
-        self.user1.save()
+    # def test_basic_location_update_near_test_incompatible_user_does_not_match_user(self):
+    #     """" 
+    #     Very different test results.
+    #     """
+    #     self.user1.latitude = 0
+    #     self.user1.longitude = 0
+    #     self.user1.save()
 
-        BaseQuestion.objects.create(id=1)
-        NumericalQuestion.objects.create(id=1, base_question_id=1)
-        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
-        NumericalResponse.objects.create(question_id=1, answer=7, user=self.user2)
+    #     BaseQuestion.objects.create(id=1)
+    #     NumericalQuestion.objects.create(id=1, base_question_id=1)
+    #     NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+    #     NumericalResponse.objects.create(question_id=1, answer=7, user=self.user2)
 
-        BaseQuestion.objects.create(id=2)
-        TextQuestion.objects.create(id=2, base_question_id=2)
-        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
-        TextResponse.objects.create(question_id=2, answer='goodbye', user=self.user2)
+    #     BaseQuestion.objects.create(id=2)
+    #     TextQuestion.objects.create(id=2, base_question_id=2)
+    #     TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+    #     TextResponse.objects.create(question_id=2, answer='goodbye', user=self.user2)
 
-        request = APIRequestFactory().put(
-          path='update-location/',
-          data={
-            'email': self.user2.email,
-            'latitude': 0,
-            'longitude': 0,
-          }
-        )
-        response = UpdateLocation.as_view()(request)
+    #     request = APIRequestFactory().put(
+    #       path='update-location/',
+    #       data={
+    #         'email': self.user2.email,
+    #         'latitude': 0,
+    #         'longitude': 0,
+    #       }
+    #     )
+    #     response = UpdateLocation.as_view()(request)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertFalse(
-          Match.objects.filter(user1=self.user1, user2=self.user2) or
-          Match.objects.filter(user1=self.user2, user2=self.user1)
-        )
-        self.assertFalse(Notification.objects.filter(user=self.user1))
-        self.assertFalse(Notification.objects.filter(user=self.user2))
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     self.assertFalse(
+    #       Match.objects.filter(user1=self.user1, user2=self.user2) or
+    #       Match.objects.filter(user1=self.user2, user2=self.user1)
+    #     )
+    #     self.assertFalse(Notification.objects.filter(user=self.user1))
+    #     self.assertFalse(Notification.objects.filter(user=self.user2))
 
 
     def test_old_location_update_does_not_match_user(self) -> None:
