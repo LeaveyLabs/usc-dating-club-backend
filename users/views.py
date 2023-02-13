@@ -564,8 +564,6 @@ class UpdateLocation(UpdateAPIView):
             Q(time__gte=timezone.now()-timezone.timedelta(days=1))
         )
         if unexpired_matches.exists(): return
-        print(f"{user.first_name} is ready to match!")
-        print(f"{user.first_name} is at {user.latitude}, {user.longitude}")
 
         within_latitude = (
           Q(latitude__isnull=False)&
@@ -610,12 +608,10 @@ class UpdateLocation(UpdateAPIView):
 
         if not nearby_users.exists(): return
 
-        compatible_users = nearby_users
-        self.filter_compatible_users(
+        compatible_users = self.filter_compatible_users(
           user=user, 
           nearby_users=nearby_users
         )
-        print(f"{user.first_name}'s compatibler users: {compatible_users}")
 
         if not compatible_users.exists(): return
         
