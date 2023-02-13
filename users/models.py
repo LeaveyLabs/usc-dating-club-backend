@@ -536,6 +536,7 @@ class Notification(models.Model):
     sound = models.TextField(null=True)
 
     def send_to_device(self) -> None:
+        print(f"Notification {self.id} is sending {self.type} notification with message: {self.message}")
         APNSDevice.objects.filter(user=self.user).send_message(
             message=self.message,
             sound=self.sound,
