@@ -765,11 +765,17 @@ class StopLocationSharing(CreateAPIView):
             user_id=user1_id,
             type=Notification.Choices.STOP_SHARE,
             message=None,
+            data={
+              'time': timezone.now().timestamp(),
+            },
           ),
           Notification(
             user_id=user2_id,
             type=Notification.Choices.STOP_SHARE,
             message=None,
+            data={
+              'time': timezone.now().timestamp(),
+            },
           ),
         ])
 
