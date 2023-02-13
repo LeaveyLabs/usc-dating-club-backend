@@ -562,6 +562,7 @@ class UpdateLocation(UpdateAPIView):
         matches = Match.objects.filter(past_matches).order_by('-time')
         if matches and matches[0].has_expired(): return
         print(f"{user.first_name} is ready to match!")
+        print(f"{user.first_name} is at {user.latitude}, {user.longitude}")
 
         within_latitude = (
           Q(latitude__isnull=False)&
