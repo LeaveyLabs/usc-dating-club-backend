@@ -78,7 +78,7 @@ class QuestionSerializer(ModelSerializer):
         prefix_list = []
         suffix_list = []
         for answer in text_answer_choices:
-            if answer in ["none/other", "none"]:
+            if answer in ["none/other", "none", "other"]:
                 prefix_list.append(answer)
             else:
                 suffix_list.append(answer)
