@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from users.models import BannedEmail, Category, EmailAuthentication, NumericalQuestion, PhoneAuthentication, TextAnswerChoice, TextQuestion, User, Match, Notification, NumericalResponse, TextResponse, BaseQuestion, WaitingEmail
+from users.models import BannedEmail, Category, EmailAuthentication, NumericalQuestion, PhoneAuthentication, TextAnswerChoice, TextQuestion, User, Match, Notification, NumericalResponse, TextResponse, BaseQuestion, WaitingEmail, Message
 
 admin.site.register(User)
 
@@ -17,7 +17,8 @@ admin.site.register(User)
     TextQuestion,
     TextAnswerChoice,
     WaitingEmail,
-    BannedEmail)
+    BannedEmail,
+    Message)
 class UniversalAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         return [field.name for field in self.model._meta.concrete_fields]
