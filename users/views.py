@@ -567,13 +567,13 @@ class UpdateLocation(UpdateAPIView):
 
         within_latitude = (
           Q(latitude__isnull=False)&
-          Q(latitude__lte=latitude+.01)&
-          Q(latitude__gte=latitude-.01)
+          Q(latitude__lte=latitude+.001)&
+          Q(latitude__gte=latitude-.001)
         )
         within_longitude = (
           Q(longitude__isnull=False)&
-          Q(longitude__lte=longitude+.01)&
-          Q(longitude__gte=longitude-.01)
+          Q(longitude__lte=longitude+.001)&
+          Q(longitude__gte=longitude-.001)
         )
         not_current_user = (
           ~Q(pk=user.pk)
