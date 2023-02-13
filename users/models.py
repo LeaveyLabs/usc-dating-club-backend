@@ -231,7 +231,7 @@ class Match(models.Model):
         return payload_copy
 
     def is_excluded_response(self, response) -> bool:
-        return response in ["none/other"]
+        return response in ["none/other", "other", "none"]
 
     def initial_match_payload(self, partner, user) -> dict:
         try:

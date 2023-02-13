@@ -63,6 +63,11 @@ class QuestionSerializer(ModelSerializer):
             return False
         return text_questions[0].is_multiple_answer
 
+    def hard_programmed_answers(self, question):
+        if question.base_question.category.trait1 == "year":
+            return ['freshman', 'sophomore', 'junior', 'senior', 'other']
+        return None
+
     def get_text_answer_choices(self, obj):
         text_questions = TextQuestion.objects.\
             filter(base_question_id=obj.id).\
@@ -70,6 +75,9 @@ class QuestionSerializer(ModelSerializer):
         if not text_questions.exists():
             return []
         text_question = text_questions[0]
+        programmed_answers = self.hard_programmed_answers(text_question)
+        if programmed_answers:
+            return programmed_answers
         text_answer_choices = [
             text_answer_choice.answer 
             for text_answer_choice in 
