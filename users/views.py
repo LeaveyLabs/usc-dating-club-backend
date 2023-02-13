@@ -577,10 +577,10 @@ class UpdateLocation(UpdateAPIView):
         not_current_user = (
           ~Q(pk=user.pk)
         )
-        # sexually_preferred = (
-        #   Q(sex_identity=user.sex_preference)&
-        #   Q(sex_preference=user.sex_identity)
-        # )
+        sexually_preferred = (
+          Q(sex_identity=user.sex_preference)&
+          Q(sex_preference=user.sex_identity)
+        )
         # not_matched_before = (
         #   ~Q(match1__user1=user)&
         #   ~Q(match1__user2=user)&
@@ -598,8 +598,8 @@ class UpdateLocation(UpdateAPIView):
         nearby_users = User.objects.filter(
           # within_latitude&
           # within_longitude&
-          not_current_user
-          # sexually_preferred&
+          not_current_user&
+          sexually_preferred
           # not_matched_before&
           # recent_update&
           # is_matchable
@@ -608,10 +608,11 @@ class UpdateLocation(UpdateAPIView):
         if not nearby_users.exists(): return
 
         compatible_users = nearby_users
-        # self.filter_compatible_users(
-        #   user=user, 
-        #   nearby_users=nearby_users
-        # )
+        self.filter_compatible_users(
+          user=user, 
+          nearby_users=nearby_users
+        )
+        print(f"{user.first_name}'s compatibler users: {compatible_users}")
 
         if not compatible_users.exists(): return
         
