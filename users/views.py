@@ -567,16 +567,16 @@ class UpdateLocation(UpdateAPIView):
         print(f"{user.first_name} is ready to match!")
         print(f"{user.first_name} is at {user.latitude}, {user.longitude}")
 
-        # within_latitude = (
-        #   Q(latitude__isnull=False)&
-        #   Q(latitude__lte=latitude+.01)&
-        #   Q(latitude__gte=latitude-.01)
-        # )
-        # within_longitude = (
-        #   Q(longitude__isnull=False)&
-        #   Q(longitude__lte=longitude+.01)&
-        #   Q(longitude__gte=longitude-.01)
-        # )
+        within_latitude = (
+          Q(latitude__isnull=False)&
+          Q(latitude__lte=latitude+.01)&
+          Q(latitude__gte=latitude-.01)
+        )
+        within_longitude = (
+          Q(longitude__isnull=False)&
+          Q(longitude__lte=longitude+.01)&
+          Q(longitude__gte=longitude-.01)
+        )
         not_current_user = (
           ~Q(pk=user.pk)
         )
@@ -599,13 +599,13 @@ class UpdateLocation(UpdateAPIView):
         )
 
         nearby_users = User.objects.filter(
-          # within_latitude&
-          # within_longitude&
+          within_latitude&
+          within_longitude&
           not_current_user&
           sexually_preferred&
-          not_matched_before
-          # recent_update&
-          # is_matchable
+          not_matched_before&
+          recent_update&
+          is_matchable
         )
 
         if not nearby_users.exists(): return
