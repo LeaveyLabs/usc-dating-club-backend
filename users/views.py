@@ -735,6 +735,7 @@ class ForceCreateMatchSerializer(Serializer):
 class ForceCreateMatch(CreateAPIView):
     serializer_class = ForceCreateMatchSerializer
     def create(self, request, *args, **kwargs):
+        print("Force Create Match Called.")
         match_request = ForceCreateMatchSerializer(data=request.data)
         match_request.is_valid(raise_exception=True)
         user1_id = match_request.data.get('user1_id')
