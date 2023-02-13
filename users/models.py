@@ -121,7 +121,7 @@ class Match(models.Model):
             self.save(setting_notification=True)
 
     def has_expired(self) -> bool:
-        return (timezone.now() - self.time) > timedelta(days=2)
+        return (timezone.now() - self.time) > timedelta(days=1)
 
     def send_match_create_to_mixpanel(self, payload1, payload2, compatibility) -> None:
         MixpanelClient.track(self.user1.id, 'Match Create', {

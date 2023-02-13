@@ -559,8 +559,11 @@ class UpdateLocation(UpdateAPIView):
         If not, match with a nearby user. 
         """
         past_matches = Q(user1=user) | Q(user2=user)
-        matches = Match.objects.filter(past_matches).order_by('-time')
-        if matches and matches[0].has_expired(): return
+        unexpired_matches = Match.objects.filter(
+            past_matches&
+            Q(time__gte=timezone.now()-timezone.timedelta(days=1))
+        )
+        if unexpired_matches.exists(): return
         print(f"{user.first_name} is ready to match!")
         print(f"{user.first_name} is at {user.latitude}, {user.longitude}")
 
@@ -587,13 +590,13 @@ class UpdateLocation(UpdateAPIView):
           ~Q(match2__user1=user)&
           ~Q(match2__user2=user)
         )
-        # recent_update = (
-        #   Q(loc_update_time__lte=timezone.now())&
-        #   Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
-        # )
-        # is_matchable = (
-        #   Q(is_matchable=True)
-        # )
+        recent_update = (
+          Q(loc_update_time__lte=timezone.now())&
+          Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
+        )
+        is_matchable = (
+          Q(is_matchable=True)
+        )
 
         nearby_users = User.objects.filter(
           # within_latitude&
