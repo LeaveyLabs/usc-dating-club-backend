@@ -65,7 +65,7 @@ class QuestionSerializer(ModelSerializer):
 
     def hard_programmed_answers(self, question):
         if question.base_question.category.trait1 == "year":
-            return ['freshman', 'sophomore', 'junior', 'senior', 'other']
+            return ['freshman', 'sophomore', 'junior', 'senior', 'grad student', 'other']
         return None
 
     def get_text_answer_choices(self, obj):
