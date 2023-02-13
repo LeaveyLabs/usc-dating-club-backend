@@ -230,6 +230,9 @@ class Match(models.Model):
         
         return payload_copy
 
+    def is_excluded_response(self, response) -> bool:
+        return response in ["none/other"]
+
     def initial_match_payload(self, partner, user) -> dict:
         try:
             user.numerical_responses
@@ -298,6 +301,8 @@ class Match(models.Model):
 
         for response in similar_text_responses.all():
             category = response.question.base_question.category
+
+            if self.is_excluded_response(response.answer): continue
 
             if not category: continue
             trait = response.question.base_question.category.trait1
@@ -536,7 +541,6 @@ class Notification(models.Model):
     sound = models.TextField(null=True)
 
     def send_to_device(self) -> None:
-        print(f"Notification {self.id} is sending {self.type} notification with message: {self.message}")
         APNSDevice.objects.filter(user=self.user).send_message(
             message=self.message,
             sound=self.sound,

@@ -70,11 +70,20 @@ class QuestionSerializer(ModelSerializer):
         if not text_questions.exists():
             return []
         text_question = text_questions[0]
-        return [
+        text_answer_choices = [
             text_answer_choice.answer 
             for text_answer_choice in 
             text_question.text_answer_choices.all()
         ]
+        prefix_list = []
+        suffix_list = []
+        for answer in text_answer_choices:
+            if answer in ["none/other", "none"]:
+                prefix_list.append(answer)
+            else:
+                suffix_list.append(answer)
+        return prefix_list + sorted(suffix_list)
+
 
 class CategorySerializer(ModelSerializer):
     class Meta:
