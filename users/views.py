@@ -581,12 +581,12 @@ class UpdateLocation(UpdateAPIView):
           Q(sex_identity=user.sex_preference)&
           Q(sex_preference=user.sex_identity)
         )
-        # not_matched_before = (
-        #   ~Q(match1__user1=user)&
-        #   ~Q(match1__user2=user)&
-        #   ~Q(match2__user1=user)&
-        #   ~Q(match2__user2=user)
-        # )
+        not_matched_before = (
+          ~Q(match1__user1=user)&
+          ~Q(match1__user2=user)&
+          ~Q(match2__user1=user)&
+          ~Q(match2__user2=user)
+        )
         # recent_update = (
         #   Q(loc_update_time__lte=timezone.now())&
         #   Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
@@ -599,8 +599,8 @@ class UpdateLocation(UpdateAPIView):
           # within_latitude&
           # within_longitude&
           not_current_user&
-          sexually_preferred
-          # not_matched_before&
+          sexually_preferred&
+          not_matched_before
           # recent_update&
           # is_matchable
         )
