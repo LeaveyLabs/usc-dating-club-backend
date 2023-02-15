@@ -457,6 +457,151 @@ class UpdateLocationTest(TestCase):
         self.assertTrue(Notification.objects.filter(user=self.user1))
         self.assertTrue(Notification.objects.filter(user=self.user2))
 
+    def test_freshman_should_match_with_freshman(self):
+        """" 
+        Both people are:
+        - in the same location
+        - opposite sex preferences
+        - similar compatibility
+        - freshmen
+        """
+
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
+
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
+
+        BaseQuestion.objects.create(id=3)
+        TextQuestion.objects.create(id=3, base_question_id=3)
+        TextResponse.objects.create(question_id=3, answer='freshman', user=self.user1)
+        TextResponse.objects.create(question_id=3, answer='freshman', user=self.user2)
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0 + float(os.environ['LOCATION_KEY']),
+            'longitude': 0 + float(os.environ['LOCATION_KEY']),
+            'is_encrypted': True,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertTrue(Notification.objects.filter(user=self.user1))
+        self.assertTrue(Notification.objects.filter(user=self.user2))
+
+    def test_freshman_should_not_match_with_other_years(self):
+        """" 
+        Both people are:
+        - in the same location
+        - opposite sex preferences
+        - similar compatibility
+        One person is:
+        - not a freshman        
+        """
+
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
+
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
+
+        BaseQuestion.objects.create(id=3)
+        TextQuestion.objects.create(id=3, base_question_id=3)
+        TextResponse.objects.create(question_id=3, answer='freshman', user=self.user1)
+        TextResponse.objects.create(question_id=3, answer='sophomore', user=self.user2)
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0 + float(os.environ['LOCATION_KEY']),
+            'longitude': 0 + float(os.environ['LOCATION_KEY']),
+            'is_encrypted': True,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertFalse(Notification.objects.filter(user=self.user1))
+        self.assertFalse(Notification.objects.filter(user=self.user2))
+
+    def test_graduates_should_match_with_graduates(self):
+        """" 
+        Both people are:
+        - in the same location
+        - opposite sex preferences
+        - similar compatibility
+        - graduates
+        """
+
+        self.user1.latitude = 0
+        self.user1.longitude = 0
+        self.user1.save()
+
+        BaseQuestion.objects.create(id=1)
+        NumericalQuestion.objects.create(id=1, base_question_id=1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user1)
+        NumericalResponse.objects.create(question_id=1, answer=1, user=self.user2)
+
+        BaseQuestion.objects.create(id=2)
+        TextQuestion.objects.create(id=2, base_question_id=2)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user1)
+        TextResponse.objects.create(question_id=2, answer='hello', user=self.user2)
+
+        BaseQuestion.objects.create(id=3)
+        TextQuestion.objects.create(id=3, base_question_id=3)
+        TextResponse.objects.create(question_id=3, answer='graduate', user=self.user1)
+        TextResponse.objects.create(question_id=3, answer='graduate', user=self.user2)
+
+        request = APIRequestFactory().put(
+          path='update-location/',
+          data={
+            'email': self.user2.email,
+            'latitude': 0 + float(os.environ['LOCATION_KEY']),
+            'longitude': 0 + float(os.environ['LOCATION_KEY']),
+            'is_encrypted': True,
+          }
+        )
+        response = UpdateLocation.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+          Match.objects.filter(user1=self.user1, user2=self.user2) or
+          Match.objects.filter(user1=self.user2, user2=self.user1)
+        )
+        self.assertTrue(Notification.objects.filter(user=self.user1))
+        self.assertTrue(Notification.objects.filter(user=self.user2))
+
+    def test_sophomores_juniors_and_seniors_can_only_match_with_each_other(self):
+        pass
+
 
 class PostSurveyAnswersTest(TestCase):
     def setUp(self):

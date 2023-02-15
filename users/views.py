@@ -530,12 +530,23 @@ class UpdateLocation(UpdateAPIView):
                 Q(numerical_responses__answer__gte=response.answer)
               )
             )
+
+        age_restriction = Q()
         for response in user.text_responses.all():
             compatible_text_responses |= (
               Q(text_responses__question_id=response.question_id)&
               Q(text_responses__answer=response.answer)
             )
-        
+            if response.answer == "freshman" or response.answer == "graduate":
+                age_restriction = (
+                  Q(text_responses__answer=response.answer)
+                )
+            else:
+                age_restriction = (
+                  ~Q(text_responses__answer="freshman")&
+                  ~Q(text_responses__answer="graduate")
+                )
+
         compatible_numerical_count = Count(
           'numerical_responses', 
           filter=compatible_numerical_responses
@@ -551,7 +562,7 @@ class UpdateLocation(UpdateAPIView):
         ).filter(
           compatible_numerical_count__gte=minimum_shared_numerical,
           compatible_text_count__gte=minimum_shared_text,
-        )
+        ).filter(age_restriction)
 
     def match_with_nearby_users(self, user, latitude, longitude) -> None:
         """ 
@@ -609,7 +620,7 @@ class UpdateLocation(UpdateAPIView):
         if not nearby_users.exists(): return
 
         compatible_users = self.filter_compatible_users(
-          user=user, 
+          user=user,
           nearby_users=nearby_users
         )
 
