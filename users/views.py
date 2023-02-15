@@ -607,7 +607,9 @@ class UpdateLocation(UpdateAPIView):
           Q(loc_update_time__gte=timezone.now()-timezone.timedelta(minutes=15))
         )
         is_matchable = (
-          Q(is_matchable=True)
+          Q(is_matchable=True)&
+          ~Q(match1__time__gte=timezone.now()-timezone.timedelta(days=1))&
+          ~Q(match2__time__gte=timezone.now()-timezone.timedelta(days=1))
         )
 
         nearby_users = User.objects.filter(
