@@ -63,10 +63,16 @@ class User(AbstractUser):
       (SexChoices.BOTH, 'BOTH'),
     )
 
+    def picture_filepath(instance, filename):
+        ext = filename.split('.')[-1]
+        new_filename = f'{instance.username}.{ext}'
+        return os.path.join('profiles', new_filename)
+
     email = models.EmailField(unique=True)
     phone_number = PhoneNumberField(unique=True)
     sex_identity = models.TextField(choices=SEX_CHOICES)
     sex_preference = models.TextField(choices=SEX_CHOICES)
+    picture = models.ImageField(upload_to=picture_filepath, null=True, blank=True)
 
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)

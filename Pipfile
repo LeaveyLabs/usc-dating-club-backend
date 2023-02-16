@@ -17,6 +17,7 @@ dj-database-url = "*"
 psycopg2 = "*"
 django-heroku = "*"
 mixpanel = "*"
+django-storages = "*"
 
 [dev-packages]
 

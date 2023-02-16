@@ -293,6 +293,7 @@ class RegisterUserSerializer(ModelSerializer):
           'last_name',
           'sex_identity',
           'sex_preference',
+          'picture',
         )
 
 class RegisterUser(CreateAPIView):
