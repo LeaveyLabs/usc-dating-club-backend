@@ -22,6 +22,7 @@ class ReadOnlyUserSerializer(ModelSerializer):
           'sex_identity',
           'sex_preference',
           'is_matchable',
+          'picture',
         )
 
 class MatchSerializer(ModelSerializer):

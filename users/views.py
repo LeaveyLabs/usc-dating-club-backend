@@ -358,6 +358,7 @@ class ReadOnlyUserSerializer(ModelSerializer):
           'sex_preference',
           'survey_responses',
           'is_matchable',
+          'picture',
         )
 
 # Post Survey Answers
