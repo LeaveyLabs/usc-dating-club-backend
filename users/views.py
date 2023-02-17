@@ -92,7 +92,7 @@ class SendEmailCode(CreateAPIView):
     def is_usc_email(self, email) -> bool:
         """ Emails should be from USC only """
         domain = email.split('@')[-1]
-        return domain in ['usc.edu']
+        return domain in ['usc.edu', 'alumni.usc.edu']
 
 # Verify Email Code
 class VerifyEmailCodeSerializer(ModelSerializer):
