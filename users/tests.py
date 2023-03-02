@@ -68,21 +68,6 @@ class SendEmailCodeTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(mail.outbox), 0)
         self.assertFalse(EmailAuthentication.objects.filter(email="taken.usc.email@usc.edu"))
-    
-    def test_non_usc_email_does_not_send_code(self):
-        """ Verify kevinsun127@gmail.com """
-        request = APIRequestFactory().post(
-          path="send-email-code/",
-          data={
-            "email": "kevinsun127@gmail.com",
-            "proxy_uuid": uuid4(),
-          }
-        )
-        response = SendEmailCode.as_view()(request)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(mail.outbox), 0)
-        self.assertFalse(EmailAuthentication.objects.filter(email="kevinsun127@gmail.com"))
 
 
 class VerifyEmailCodeTest(TestCase):

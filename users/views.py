@@ -50,15 +50,6 @@ class SendEmailCode(CreateAPIView):
         email = email_request.data.get('email').lower()
         proxy_uuid = email_request.data.get('proxy_uuid')
 
-        if not self.is_usc_email(email):
-          WaitingEmail.objects.create(email=email)
-          return Response(
-            {
-              'email': ['email added to waiting list']
-            },
-            status.HTTP_400_BAD_REQUEST,
-          )
-
         user_matches = User.objects.filter(email=email)
         if user_matches.exists():
             return Response(
