@@ -90,6 +90,10 @@ class User(AbstractUser):
             Token.objects.create(user_id=self.id)
         return user
 
+class Interest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="interest")
+    category = models.TextField()
+
 class Match(models.Model):
     """ Match between two users """
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name="match1")

@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, IntegerField
-from users.models import Category, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail, Message
+from users.models import Category, Interest, NumericalQuestion, TextAnswerChoice, TextQuestion, User, Match, BaseQuestion, NumericalResponse, TextResponse, WaitingEmail, BannedEmail, Message
 
 
 """ Serializers """
@@ -143,6 +143,11 @@ class MessageSerializer(ModelSerializer):
     def get_receiver_id(self, obj):
         return obj.receiver.id
 
+class InterestSerializer(ModelSerializer):
+    class Meta:
+        """ JSON fields from Interest """
+        model = Interest
+        fields = '__all__'
 
 """ Viewsets """
 
@@ -264,3 +269,11 @@ class MessageViewset(viewsets.ModelViewSet):
             )  
         )
         
+class InterestViewset(viewsets.ModelViewSet):
+    """
+    A viewset for viewing and editing interests.
+    """
+    serializer_class = InterestSerializer
+    permission_class = [AllowAny, ]
+    queryset = Interest.objects.all()
+    
